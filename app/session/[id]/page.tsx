@@ -190,6 +190,13 @@ export default function SessionPage() {
                 key={msg.id}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
+                {msg.role === "assistant" && (
+                  <img
+                    src="/renata-avatar.png"
+                    alt="Renata"
+                    className="mr-2.5 mt-1 h-7 w-7 flex-shrink-0 rounded-full"
+                  />
+                )}
                 <div
                   className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
                     msg.role === "user"
@@ -210,6 +217,11 @@ export default function SessionPage() {
           })}
           {isStreaming && messages[messages.length - 1]?.role === "user" && (
             <div className="flex justify-start">
+              <img
+                src="/renata-avatar.png"
+                alt="Renata"
+                className="mr-2.5 mt-1 h-7 w-7 flex-shrink-0 rounded-full"
+              />
               <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-4 py-3">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />

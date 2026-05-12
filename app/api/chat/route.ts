@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     system: systemContent,
     messages: contextMessages,
     tools: agentTools,
-    continueUntil: stepCountIs(5),
+    stopWhen: stepCountIs(5),
     async onFinish({ text, steps }) {
       if (!text) return;
 
