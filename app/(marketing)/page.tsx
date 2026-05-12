@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DemoChat } from "@/components/marketing/demo-chat";
 import { FeaturesGrid } from "@/components/marketing/features-grid";
-import { heroContent, steps } from "@/lib/marketing-content";
+import { heroContent, steps, siteConfig } from "@/lib/marketing-content";
+
+export const metadata: Metadata = {
+  title: `${siteConfig.name} — AI CV Writing Agent | Free Resume Builder`,
+  description:
+    "Renata is a free AI CV writing agent. Upload your old resume, answer a few questions, and download a polished, ATS-friendly PDF tailored to your target role. Multilingual support included.",
+  alternates: {
+    canonical: siteConfig.url,
+  },
+};
 
 function CtaButton({ label }: { label: string }) {
   return (
@@ -17,9 +27,84 @@ function CtaButton({ label }: { label: string }) {
   );
 }
 
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: siteConfig.name,
+    url: siteConfig.url,
+    description: siteConfig.description,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Any",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    featureList: [
+      "AI-guided CV writing conversation",
+      "PDF upload and parsing",
+      "ATS-friendly resume output",
+      "PDF download",
+      "Multilingual CV generation",
+      "Telegram integration",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is Renata?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Renata is a free AI-powered CV writing agent. It guides you through a conversation to understand your experience, then writes a professional, ATS-friendly CV tailored to your target role. You can download the result as a PDF.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How does Renata create my CV?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Renata uses a step-by-step conversation: first you specify your target role and preferred CV language, then you can upload an existing CV or start from scratch. The AI asks targeted follow-up questions about your achievements and skills, then generates a polished CV in markdown that you can download as a PDF.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is Renata free to use?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, Renata is completely free. Sign up, start a session, and download your CV as a PDF at no cost.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can Renata write my CV in different languages?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Renata responds in whatever language you write to it and asks what language you want the CV written in. You can chat in Spanish but get a CV in English, or any other combination.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What does ATS-friendly mean?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "ATS stands for Applicant Tracking System — software that companies use to filter resumes. An ATS-friendly CV uses clean formatting, relevant keywords, and standard section headings so it passes through these filters and reaches a human recruiter.",
+        },
+      },
+    ],
+  },
+];
+
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pb-20 pt-24 text-center">
         <h1 className="font-serif text-4xl leading-tight tracking-tight text-neutral-100 sm:text-5xl md:text-6xl">

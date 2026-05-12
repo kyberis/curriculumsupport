@@ -1,0 +1,93 @@
+# Renata — Full Documentation for LLMs
+
+> Free AI-powered CV writing agent. Upload your old resume or start from scratch, answer targeted questions, and download a polished, ATS-friendly PDF tailored to your target role. Works in any language.
+
+## What is Renata?
+
+Renata is a free web application that helps people who haven't updated their CV in a long time revive it for a specific job position. The name "Renata" comes from Latin and means "reborn" — reflecting the product's core purpose of giving your professional profile a fresh start.
+
+It uses an AI agent powered by Claude (Anthropic) that conducts a structured, conversational interview to understand your experience, achievements, and target role, then generates a complete, ATS-optimized CV.
+
+## Who is Renata for?
+
+- Job seekers who haven't updated their resume in years and need to tailor it for a specific position.
+- Career changers who need to reframe their experience for a new industry or role.
+- Non-native English speakers who want a professional CV in English (or any other language).
+- Anyone who finds blank resume templates intimidating and prefers a guided conversation.
+
+## Key Features
+
+### AI-Guided Conversation
+Renata follows a structured 5-step workflow:
+1. **Target role & language**: Asks what position you're applying for and what language you want the CV in.
+2. **Existing CV**: Accepts a PDF upload, LinkedIn URL, or starts from scratch.
+3. **Targeted questions**: Asks 4–6 focused follow-ups about achievements, skills, gaps, tone, and keywords.
+4. **CV draft**: Generates a complete CV in well-structured markdown.
+5. **Review & iterate**: Offers to adjust sections, tone, or content until you're satisfied.
+
+### Multilingual Support
+- The agent detects your language and responds in it (Spanish, English, French, Portuguese, German, etc.).
+- You can chat in one language but request the CV in a different language.
+- The PDF output uses Noto Sans fonts for broad Unicode support.
+
+### PDF Upload and Parsing
+Upload an existing CV as a PDF. Renata extracts the text content and uses it as a starting point, summarizing key points before asking refinement questions.
+
+### ATS-Friendly Output
+Generated CVs use:
+- Clean, standard section headings (Professional Summary, Experience, Education, Skills, Certifications).
+- Action verbs and quantified achievements.
+- Relevant industry keywords discovered through built-in web search.
+- Concise 1–2 page format.
+
+### PDF Download
+Download the finished CV as a professionally formatted PDF with clean typography.
+
+### Web Search Integration
+Renata can search the web to:
+- Look up the target company's culture, values, and tech stack.
+- Research common requirements and keywords for the target role.
+- Find industry-specific terminology and trends.
+- Verify facts about certifications, tools, or frameworks.
+
+### Telegram Integration
+Connect your Telegram account to chat with Renata directly from Telegram. The same AI agent, same conversation quality, accessible from your phone.
+
+### Session History
+All conversations and CV drafts are saved. Come back anytime to continue refining your CV or start a new session for a different role.
+
+## Technical Details
+
+- **Framework**: Next.js (App Router)
+- **AI Model**: Claude (Anthropic) via Vercel AI SDK
+- **Database**: PostgreSQL (Neon) with Drizzle ORM
+- **Authentication**: NextAuth v5 with Google OAuth
+- **PDF Generation**: @react-pdf/renderer with Noto Sans fonts
+- **PDF Parsing**: unpdf
+- **Hosting**: Vercel
+
+## Frequently Asked Questions
+
+### Is Renata free?
+Yes, Renata is completely free to use. Sign up, create sessions, and download as many CVs as you need.
+
+### What languages does Renata support?
+Renata can converse and write CVs in any language that Claude supports, including English, Spanish, French, Portuguese, German, Italian, Dutch, and many more. You can chat in one language and get the CV in another.
+
+### What format is the CV?
+The CV is generated as structured markdown during the conversation, and can be downloaded as a cleanly formatted PDF.
+
+### Can I upload my existing CV?
+Yes. Upload a PDF and Renata will extract the text, summarize it, and use it as a starting point for the new tailored version.
+
+### What does "ATS-friendly" mean?
+ATS (Applicant Tracking System) is software that companies use to filter resumes before a human sees them. An ATS-friendly CV uses clean formatting, relevant keywords, standard section headings, and avoids complex layouts that confuse these systems.
+
+### Can I use Renata from Telegram?
+Yes. Connect your Telegram account from the Settings page, and you can chat with Renata directly in Telegram.
+
+## Links
+
+- Homepage: https://renata.vercel.app
+- Sign Up: https://renata.vercel.app/sign-up
+- GitHub: https://github.com/kyberis/curriculumsupport

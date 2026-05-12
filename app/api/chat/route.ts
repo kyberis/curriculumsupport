@@ -1,4 +1,4 @@
-import { streamText, type UIMessage } from "ai";
+import { streamText, stepCountIs, type UIMessage } from "ai";
 import { db } from "@/lib/db";
 import { messages, sessions } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     system: systemContent,
     messages: contextMessages,
     tools: agentTools,
-    maxSteps: 5,
+    continueUntil: stepCountIs(5),
     async onFinish({ text, steps }) {
       if (!text) return;
 

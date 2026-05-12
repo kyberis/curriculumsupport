@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
+import { siteConfig } from "@/lib/marketing-content";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,10 +19,58 @@ const garamond = EB_Garamond({
   subsets: ["latin"],
 });
 
+const title = `${siteConfig.name} — AI CV Writing Agent`;
+const description =
+  "Free AI-powered CV writing agent. Upload your old resume, answer targeted questions, and download a polished, ATS-friendly PDF tailored to your target role. Works in any language.";
+
 export const metadata: Metadata = {
-  title: "Renata — AI CV Writing Agent",
-  description:
-    "An AI-powered agent that helps you craft a professional CV through a guided conversation. Upload your existing CV, answer targeted questions, and download a polished PDF.",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: title,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description,
+  keywords: [
+    "AI CV writer",
+    "resume builder",
+    "ATS-friendly CV",
+    "AI resume agent",
+    "CV generator",
+    "professional resume",
+    "tailored CV",
+    "PDF resume download",
+    "career tools",
+    "Renata",
+  ],
+  authors: [{ name: siteConfig.name }],
+  creator: siteConfig.name,
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: siteConfig.url,
+  },
 };
 
 export default function RootLayout({

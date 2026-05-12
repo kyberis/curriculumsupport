@@ -1,0 +1,30 @@
+# Renata
+
+> Free AI-powered CV writing agent. Upload your old resume or start from scratch, answer targeted questions, and download a polished, ATS-friendly PDF tailored to your target role. Works in any language.
+
+Renata is a web application that helps job seekers revive and tailor their CV for a specific position. It uses an AI agent (powered by Claude) that guides users through a structured conversation to craft a professional resume.
+
+## Key Features
+
+- **AI-guided conversation**: Step-by-step flow — target role, existing CV upload, targeted questions, draft, review.
+- **Multilingual**: The agent responds in your language and can write the CV in a different language if needed.
+- **PDF upload and parsing**: Upload an existing CV as PDF; the system extracts and understands the content.
+- **ATS-friendly output**: Clean formatting with relevant keywords, standard sections, and action verbs.
+- **PDF download**: Download the finished CV as a professionally formatted PDF.
+- **Telegram integration**: Chat with Renata directly from Telegram.
+- **Session history**: Conversations and drafts are saved; come back anytime to iterate.
+
+## How It Works
+
+1. Sign up and start a new session.
+2. Tell Renata the role you're targeting and what language you want the CV in.
+3. Upload an existing CV (PDF) or start from scratch.
+4. Answer 4–6 focused questions about achievements, skills, and preferences.
+5. Renata generates a complete, tailored CV in markdown.
+6. Review, request changes, then download as PDF.
+
+## Links
+
+- [Homepage](https://renata.vercel.app)
+- [Sign Up](https://renata.vercel.app/sign-up)
+- [Full details for LLMs](https://renata.vercel.app/llms-full.txt)

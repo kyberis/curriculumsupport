@@ -9,7 +9,7 @@ import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
 import { agentTools } from "@/lib/tools";
 import { eq, and, gt, desc } from "drizzle-orm";
-import { generateText } from "ai";
+import { generateText, stepCountIs } from "ai";
 
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
@@ -172,7 +172,7 @@ export async function POST(req: Request) {
       system: systemContent,
       messages: contextMessages,
       tools: agentTools,
-      maxSteps: 5,
+      continueUntil: stepCountIs(5),
     });
 
     await db.insert(messages).values({

@@ -12,6 +12,7 @@ export const siteConfig = {
   tagline: "Your CV, reborn.",
   description:
     "An AI agent that guides you through building a professional, ATS-friendly CV — tailored to the role you want.",
+  url: "https://renata.vercel.app",
 };
 
 export const heroContent = {

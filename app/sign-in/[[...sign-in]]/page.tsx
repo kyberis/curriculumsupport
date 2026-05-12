@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { signIn } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: "Sign In",
+  description:
+    "Sign in to Renata to start building your professional, ATS-friendly CV with AI guidance.",
+};
 
 export default function SignInPage() {
   return (
