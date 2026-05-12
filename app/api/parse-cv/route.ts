@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { sessions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { PDFParse } from "pdf-parse";
+import { extractText, getMeta } from "unpdf";
 import { getUserId } from "@/lib/auth";
 
 export async function POST(req: Request) {
@@ -32,9 +32,17 @@ export async function POST(req: Request) {
   const arrayBuffer = await file.arrayBuffer();
   const data = new Uint8Array(arrayBuffer);
 
-  const parser = new PDFParse({ data });
-  const result = await parser.getText();
-  const extractedText = result.text.trim();
+  let extractedText: string;
+  let pageCount: number;
+
+  try {
+    const { text, totalPages } = await extractText(data, { mergePages: true });
+    extractedText = (text as string).trim();
+    pageCount = totalPages;
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    return new Response(`Failed to parse PDF: ${msg}`, { status: 422 });
+  }
 
   if (!extractedText) {
     return new Response("Could not extract text from PDF", { status: 422 });
@@ -47,6 +55,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     text: extractedText,
-    pages: result.total,
+    pages: pageCount,
   });
 }
