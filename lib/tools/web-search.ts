@@ -15,7 +15,7 @@ interface TavilyResponse {
 export const webSearch = tool({
   description:
     "Search the web for real-time information about a company, industry, job role, skills in demand, or any topic relevant to building a better CV. Use this when the user mentions a specific company, role, or when you need current data to tailor the CV.",
-  parameters: z.object({
+  inputSchema: z.object({
     query: z
       .string()
       .describe(
