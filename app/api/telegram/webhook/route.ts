@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/schema";
 import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { AI_MODEL } from "@/lib/model";
 import { agentTools } from "@/lib/tools";
 import { eq, and, gt, desc } from "drizzle-orm";
 import { generateText, stepCountIs } from "ai";
@@ -168,7 +169,7 @@ export async function POST(req: Request) {
 
   try {
     const result = await generateText({
-      model: "anthropic/claude-sonnet-4.6",
+      model: AI_MODEL,
       system: systemContent,
       messages: contextMessages,
       tools: agentTools,

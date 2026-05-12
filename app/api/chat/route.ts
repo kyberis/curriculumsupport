@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { messages, sessions } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { AI_MODEL } from "@/lib/model";
 import { agentTools } from "@/lib/tools";
 import { getUserId } from "@/lib/auth";
 
@@ -71,7 +72,7 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: "anthropic/claude-sonnet-4.6",
+    model: AI_MODEL,
     system: systemContent,
     messages: contextMessages,
     tools: agentTools,

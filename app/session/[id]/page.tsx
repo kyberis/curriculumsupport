@@ -11,13 +11,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
+  Check,
   Download,
   Paperclip,
+  Pencil,
   Send,
   FileText,
   Loader2,
+  X,
 } from "lucide-react";
 import { siteConfig } from "@/lib/marketing-content";
+import { AI_MODEL_LABEL } from "@/lib/model";
 import { DonateBanner } from "@/components/donate-banner";
 import type { Session, Message as DbMessage } from "@/lib/db/schema";
 
@@ -39,6 +43,9 @@ export default function SessionPage() {
   const [uploading, setUploading] = useState(false);
   const [hasGeneratedCv, setHasGeneratedCv] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -135,6 +142,40 @@ export default function SessionPage() {
     }
   }
 
+  function startEditingTitle() {
+    setTitleDraft(session?.title || "");
+    setEditingTitle(true);
+    setTimeout(() => titleInputRef.current?.select(), 0);
+  }
+
+  async function saveTitle() {
+    const newTitle = titleDraft.trim();
+    if (!newTitle || newTitle === session?.title) {
+      setEditingTitle(false);
+      return;
+    }
+
+    const res = await fetch(`/api/sessions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newTitle }),
+    });
+
+    if (res.ok) {
+      setSession((prev) => (prev ? { ...prev, title: newTitle } : prev));
+    }
+    setEditingTitle(false);
+  }
+
+  function handleTitleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitle();
+    } else if (e.key === "Escape") {
+      setEditingTitle(false);
+    }
+  }
+
   if (initialLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0d1117]">
@@ -160,9 +201,49 @@ export default function SessionPage() {
               Back
             </Button>
           </Link>
-          <span className="font-serif text-lg text-neutral-100">
-            {session?.title || siteConfig.name}
-          </span>
+          {editingTitle ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                ref={titleInputRef}
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                onBlur={saveTitle}
+                className="rounded border border-white/20 bg-[#161b22] px-2 py-0.5 font-serif text-lg text-neutral-100 outline-none focus:border-amber-500/50"
+                maxLength={100}
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-green-400 hover:text-green-300"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  saveTitle();
+                }}
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-neutral-400 hover:text-neutral-300"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setEditingTitle(false);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={startEditingTitle}
+              className="group flex items-center gap-1.5 font-serif text-lg text-neutral-100"
+            >
+              {session?.title || siteConfig.name}
+              <Pencil className="h-3.5 w-3.5 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100" />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {hasGeneratedCv && (
@@ -282,6 +363,9 @@ export default function SessionPage() {
             Extracting text from your PDF...
           </p>
         )}
+        <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-neutral-600">
+          Powered by {AI_MODEL_LABEL}
+        </p>
       </div>
     </div>
   );
