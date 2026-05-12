@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -195,7 +196,13 @@ export default function SessionPage() {
                       : "bg-white/5 text-neutral-300"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{text}</p>
+                  {msg.role === "assistant" ? (
+                    <div className="prose prose-invert prose-sm max-w-none prose-headings:text-neutral-100 prose-headings:font-semibold prose-h1:text-lg prose-h2:text-base prose-h3:text-sm prose-p:text-neutral-300 prose-strong:text-neutral-200 prose-li:text-neutral-300 prose-a:text-amber-400">
+                      <ReactMarkdown>{text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{text}</p>
+                  )}
                 </div>
               </div>
             );
