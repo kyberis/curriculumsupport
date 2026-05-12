@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SignInButton, SignUpButton, Show } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/marketing-content";
 
@@ -12,28 +11,19 @@ export function Nav() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <Show when="signed-out">
-            <SignInButton mode="modal">
-              <Button
-                variant="ghost"
-                className="text-neutral-300 hover:text-white"
-              >
-                Sign in
-              </Button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <Button className="bg-amber-600 text-white hover:bg-amber-500">
-                Get started
-              </Button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/dashboard">
-              <Button className="bg-amber-600 text-white hover:bg-amber-500">
-                Dashboard
-              </Button>
-            </Link>
-          </Show>
+          <Link href="/sign-in">
+            <Button
+              variant="ghost"
+              className="text-neutral-300 hover:text-white"
+            >
+              Sign in
+            </Button>
+          </Link>
+          <Link href="/sign-up">
+            <Button className="bg-amber-600 text-white hover:bg-amber-500">
+              Get started
+            </Button>
+          </Link>
         </div>
       </div>
     </nav>

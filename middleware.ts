@@ -1,18 +1,12 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/session(.*)",
-  "/api/chat(.*)",
-  "/api/sessions(.*)",
-  "/api/parse-cv(.*)",
-]);
-
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
+export default function middleware(req: NextRequest) {
+  // Clerk auth disabled until real credentials are configured.
+  // Re-enable by replacing this file with the clerkMiddleware version
+  // once CLERK_SECRET_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY are set.
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

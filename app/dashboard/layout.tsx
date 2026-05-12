@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import { siteConfig } from "@/lib/marketing-content";
 
 export default function DashboardLayout({
@@ -14,7 +13,6 @@ export default function DashboardLayout({
           <Link href="/dashboard" className="font-serif text-xl text-neutral-100">
             {siteConfig.name}
           </Link>
-          <UserButton />
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">

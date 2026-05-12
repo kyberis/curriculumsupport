@@ -1,9 +1,21 @@
-import { SignUpButton, Show } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DemoChat } from "@/components/marketing/demo-chat";
 import { FeaturesGrid } from "@/components/marketing/features-grid";
 import { heroContent, steps } from "@/lib/marketing-content";
+
+function CtaButton({ label }: { label: string }) {
+  return (
+    <Link href="/sign-up">
+      <Button
+        size="lg"
+        className="bg-amber-600 px-8 text-base text-white hover:bg-amber-500"
+      >
+        {label}
+      </Button>
+    </Link>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -19,26 +31,7 @@ export default function HomePage() {
           {heroContent.subheadline}
         </p>
         <div className="mt-8">
-          <Show when="signed-out">
-            <SignUpButton mode="modal">
-              <Button
-                size="lg"
-                className="bg-amber-600 px-8 text-base text-white hover:bg-amber-500"
-              >
-                {heroContent.cta}
-              </Button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="bg-amber-600 px-8 text-base text-white hover:bg-amber-500"
-              >
-                Go to dashboard
-              </Button>
-            </Link>
-          </Show>
+          <CtaButton label={heroContent.cta} />
         </div>
       </section>
 
@@ -87,26 +80,7 @@ export default function HomePage() {
           hours.
         </p>
         <div className="mt-8">
-          <Show when="signed-out">
-            <SignUpButton mode="modal">
-              <Button
-                size="lg"
-                className="bg-amber-600 px-8 text-base text-white hover:bg-amber-500"
-              >
-                Get started — free
-              </Button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
-            <Link href="/dashboard">
-              <Button
-                size="lg"
-                className="bg-amber-600 px-8 text-base text-white hover:bg-amber-500"
-              >
-                Go to dashboard
-              </Button>
-            </Link>
-          </Show>
+          <CtaButton label="Get started — free" />
         </div>
       </section>
     </>
