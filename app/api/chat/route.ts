@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { messages, sessions } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { agentTools } from "@/lib/tools";
 import { getUserId } from "@/lib/auth";
 
 function extractTextFromParts(msg: UIMessage): string {
@@ -70,7 +71,11 @@ export async function POST(req: Request) {
     model: "anthropic/claude-sonnet-4.6",
     system: systemContent,
     messages: contextMessages,
+    tools: agentTools,
+    maxSteps: 5,
     async onFinish({ text }) {
+      if (!text) return;
+
       await db.insert(messages).values({
         sessionId,
         role: "assistant",

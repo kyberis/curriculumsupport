@@ -7,6 +7,7 @@ import {
 } from "@/lib/db/schema";
 import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { agentTools } from "@/lib/tools";
 import { eq, and, gt, desc } from "drizzle-orm";
 import { generateText } from "ai";
 
@@ -167,6 +168,8 @@ export async function POST(req: Request) {
       model: "anthropic/claude-sonnet-4.6",
       system: systemContent,
       messages: contextMessages,
+      tools: agentTools,
+      maxSteps: 5,
     });
 
     await db.insert(messages).values({
