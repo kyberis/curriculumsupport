@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { siteConfig } from "@/lib/marketing-content";
+import { DonateBanner } from "@/components/donate-banner";
 import type { Session, Message as DbMessage } from "@/lib/db/schema";
 
 function getMessageText(msg: UIMessage): string {
@@ -218,6 +219,8 @@ export default function SessionPage() {
           )}
         </div>
       </ScrollArea>
+
+      {hasGeneratedCv && <DonateBanner />}
 
       {/* Input */}
       <div className="border-t border-white/10 bg-[#0d1117] px-6 py-4">

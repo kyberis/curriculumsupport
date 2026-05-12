@@ -66,6 +66,9 @@ export async function POST(req: Request) {
   if (session.targetRole) {
     systemContent += `\n\n## Target Role\nThe user is targeting: ${session.targetRole}`;
   }
+  if (session.cvLanguage) {
+    systemContent += `\n\n## CV Language\nThe user wants the CV written in: ${session.cvLanguage}`;
+  }
 
   const result = streamText({
     model: "anthropic/claude-sonnet-4.6",
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
     messages: contextMessages,
     tools: agentTools,
     maxSteps: 5,
-    async onFinish({ text }) {
+    async onFinish({ text, steps }) {
       if (!text) return;
 
       await db.insert(messages).values({
@@ -82,10 +85,27 @@ export async function POST(req: Request) {
         content: text,
       });
 
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
+
+      for (const step of steps) {
+        for (const call of step.toolCalls) {
+          if (call.toolName === "setCvLanguage") {
+            const input = call.input as { language?: string };
+            if (input.language) {
+              updates.cvLanguage = input.language;
+            }
+          }
+        }
+      }
+
       if (text.includes("# ") && text.includes("## Experience")) {
+        updates.generatedCv = text;
+      }
+
+      if (Object.keys(updates).length > 1) {
         await db
           .update(sessions)
-          .set({ generatedCv: text, updatedAt: new Date() })
+          .set(updates)
           .where(eq(sessions.id, sessionId));
       }
     },

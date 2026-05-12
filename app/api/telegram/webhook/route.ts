@@ -160,6 +160,9 @@ export async function POST(req: Request) {
   if (activeSession.targetRole) {
     systemContent += `\n\n## Target Role\n${activeSession.targetRole}`;
   }
+  if (activeSession.cvLanguage) {
+    systemContent += `\n\n## CV Language\nThe user wants the CV written in: ${activeSession.cvLanguage}`;
+  }
   systemContent +=
     "\n\nNote: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.";
 
@@ -178,9 +181,26 @@ export async function POST(req: Request) {
       content: result.text,
     });
 
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+
+    for (const step of result.steps) {
+      for (const call of step.toolCalls) {
+        if (call.toolName === "setCvLanguage") {
+          const input = call.input as { language?: string };
+          if (input.language) {
+            updates.cvLanguage = input.language;
+          }
+        }
+      }
+    }
+
+    if (result.text.includes("# ") && result.text.includes("## Experience")) {
+      updates.generatedCv = result.text;
+    }
+
     await db
       .update(sessions)
-      .set({ updatedAt: new Date() })
+      .set(updates)
       .where(eq(sessions.id, activeSession.id));
 
     const chunks = splitMessage(result.text, 4000);

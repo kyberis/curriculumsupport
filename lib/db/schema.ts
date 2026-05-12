@@ -85,6 +85,7 @@ export const sessions = pgTable("sessions", {
   targetRole: text("target_role"),
   cvContent: text("cv_content"),
   generatedCv: text("generated_cv"),
+  cvLanguage: text("cv_language"),
   status: sessionStatusEnum("status").notNull().default("in_progress"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

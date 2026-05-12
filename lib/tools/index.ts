@@ -1,5 +1,6 @@
 import { webSearch } from "./web-search";
+import { setCvLanguage } from "./set-cv-language";
 
-export { webSearch };
+export { webSearch, setCvLanguage };
 
-export const agentTools = { webSearch };
+export const agentTools = { webSearch, setCvLanguage };

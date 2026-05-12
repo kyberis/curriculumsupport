@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/lib/auth-config";
 import { siteConfig } from "@/lib/marketing-content";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Settings, Heart } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -56,6 +56,17 @@ export default async function DashboardLayout({
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
         {children}
       </main>
+      <footer className="border-t border-white/5 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-center px-6">
+          <Link
+            href="/dashboard/donate"
+            className="inline-flex items-center gap-1.5 text-xs text-neutral-600 transition-colors hover:text-neutral-400"
+          >
+            <Heart className="h-3 w-3" />
+            Support this project
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

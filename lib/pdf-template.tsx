@@ -1,22 +1,40 @@
 import ReactPDF, {
   Document,
+  Font,
   Page,
   Text,
   View,
   StyleSheet,
 } from "@react-pdf/renderer";
 
+const NOTO_SANS_BASE =
+  "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest";
+
+Font.register({
+  family: "NotoSans",
+  fonts: [
+    { src: `${NOTO_SANS_BASE}/latin-400-normal.ttf`, fontWeight: 400 },
+    { src: `${NOTO_SANS_BASE}/latin-700-normal.ttf`, fontWeight: 700 },
+    {
+      src: `${NOTO_SANS_BASE}/latin-400-italic.ttf`,
+      fontWeight: 400,
+      fontStyle: "italic",
+    },
+  ],
+});
+
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
     lineHeight: 1.5,
     color: "#1a1a1a",
   },
   name: {
     fontSize: 22,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     marginBottom: 4,
     color: "#0d1117",
   },
@@ -27,7 +45,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 12,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     marginTop: 14,
     marginBottom: 6,
     color: "#0d1117",
@@ -37,7 +56,8 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 10,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSans",
+    fontWeight: 700,
     marginTop: 6,
   },
   jobDate: {
