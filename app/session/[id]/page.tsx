@@ -12,7 +12,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
   Check,
-  Download,
   Paperclip,
   Pencil,
   Send,
@@ -122,10 +121,6 @@ export default function SessionPage() {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }
-
-  function handleDownload() {
-    window.open(`/api/sessions/${id}/export-pdf`, "_blank");
   }
 
   function handleSend() {
@@ -245,19 +240,7 @@ export default function SessionPage() {
             </button>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          {hasGeneratedCv && (
-            <Button
-              onClick={handleDownload}
-              variant="outline"
-              size="sm"
-              className="border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
-            >
-              <Download className="mr-1.5 h-4 w-4" />
-              Download PDF
-            </Button>
-          )}
-        </div>
+        <div className="flex items-center gap-3" />
       </header>
 
       {/* Messages */}

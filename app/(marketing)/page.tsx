@@ -12,7 +12,7 @@ import { Users } from "lucide-react";
 export const metadata: Metadata = {
   title: `${siteConfig.name} — AI CV Writing Agent | Free Resume Builder`,
   description:
-    "Renata is a free AI CV writing agent. Upload your old resume, answer a few questions, and download a polished, ATS-friendly PDF tailored to your target role. Multilingual support included.",
+    "Renata is a free AI CV writing agent. Upload your old resume, answer a few questions, and get a polished, ATS-friendly CV tailored to your target role. Multilingual support included.",
   alternates: {
     canonical: siteConfig.url,
   },
@@ -49,7 +49,7 @@ const jsonLd = [
       "AI-guided CV writing conversation",
       "PDF upload and parsing",
       "ATS-friendly resume output",
-      "PDF download",
+      "Easy export to PDF via markdown tools",
       "Multilingual CV generation",
       "Telegram integration",
     ],
@@ -63,7 +63,7 @@ const jsonLd = [
         name: "What is Renata?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Renata is a free AI-powered CV writing agent. It guides you through a conversation to understand your experience, then writes a professional, ATS-friendly CV tailored to your target role. You can download the result as a PDF.",
+          text: "Renata is a free AI-powered CV writing agent. It guides you through a conversation to understand your experience, then writes a professional, ATS-friendly CV tailored to your target role.",
         },
       },
       {
@@ -71,7 +71,7 @@ const jsonLd = [
         name: "How does Renata create my CV?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Renata uses a step-by-step conversation: first you specify your target role and preferred CV language, then you can upload an existing CV or start from scratch. The AI asks targeted follow-up questions about your achievements and skills, then generates a polished CV in markdown that you can download as a PDF.",
+          text: "Renata uses a step-by-step conversation: first you specify your target role and preferred CV language, then you can upload an existing CV or start from scratch. The AI asks targeted follow-up questions about your achievements and skills, then generates a polished CV in markdown that you can copy and export.",
         },
       },
       {
@@ -79,7 +79,7 @@ const jsonLd = [
         name: "Is Renata free to use?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes, Renata is completely free. Sign up, start a session, and download your CV as a PDF at no cost.",
+          text: "Yes, Renata is completely free. Sign up, start a session, and get your polished CV at no cost.",
         },
       },
       {

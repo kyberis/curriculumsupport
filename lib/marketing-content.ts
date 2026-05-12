@@ -18,7 +18,7 @@ export const siteConfig = {
 export const heroContent = {
   headline: ["Your next role", "starts with a better CV."],
   subheadline:
-    "Upload your existing CV or start from scratch. Our AI agent asks the right questions, then writes a polished, ATS-friendly CV you can download as a PDF.",
+    "Upload your existing CV or start from scratch. Our AI agent asks the right questions, then writes a polished, ATS-friendly CV ready for your next application.",
   cta: "Get started — free",
 };
 
@@ -65,8 +65,9 @@ export const features = [
   },
   {
     icon: Download,
-    title: "Download as PDF",
-    description: "Clean, ATS-friendly output ready to send to recruiters.",
+    title: "Export anywhere",
+    description:
+      "Copy your finished CV and paste it into Google Docs, Word, or a markdown-to-PDF tool.",
   },
   {
     icon: History,
@@ -97,6 +98,6 @@ export const steps = [
     number: "03",
     title: "Download your CV",
     description:
-      "Review the draft, request changes, then download a polished PDF.",
+      "Review the draft, request changes, then copy your polished CV.",
   },
 ];
