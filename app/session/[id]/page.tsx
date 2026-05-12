@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -175,7 +174,6 @@ export default function SessionPage() {
               Download PDF
             </Button>
           )}
-          <UserButton />
         </div>
       </header>
 
