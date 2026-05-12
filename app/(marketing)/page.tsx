@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { DemoChat } from "@/components/marketing/demo-chat";
 import { FeaturesGrid } from "@/components/marketing/features-grid";
 import { heroContent, steps, siteConfig } from "@/lib/marketing-content";
+import { db } from "@/lib/db";
+import { sessions } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
+import { Users } from "lucide-react";
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} — AI CV Writing Agent | Free Resume Builder`,
@@ -98,7 +102,14 @@ const jsonLd = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const BASE_USERS = 148;
+
+  const [result] = await db
+    .select({ count: sql<number>`count(distinct ${sessions.userId})` })
+    .from(sessions);
+  const userCount = BASE_USERS + (result?.count ?? 0);
+
   return (
     <>
       <script
@@ -117,6 +128,13 @@ export default function HomePage() {
         </p>
         <div className="mt-8">
           <CtaButton label={heroContent.cta} />
+        </div>
+        <div className="mx-auto mt-6 flex items-center justify-center gap-2 text-sm text-neutral-500">
+          <Users className="h-4 w-4 text-amber-500/70" />
+          <span>
+            <span className="font-medium text-neutral-300">{userCount}+</span>{" "}
+            professionals already improving their CVs
+          </span>
         </div>
       </section>
 
