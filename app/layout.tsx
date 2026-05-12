@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { EB_Garamond } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,16 +24,12 @@ export const metadata: Metadata = {
     "An AI-powered agent that helps you craft a professional CV through a guided conversation. Upload your existing CV, answer targeted questions, and download a polished PDF.",
 };
 
-const clerkEnabled =
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes("placeholder");
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const content = (
+  return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${garamond.variable} h-full antialiased dark`}
@@ -42,10 +37,4 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
-
-  if (clerkEnabled) {
-    return <ClerkProvider>{content}</ClerkProvider>;
-  }
-
-  return content;
 }

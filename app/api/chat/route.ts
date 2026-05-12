@@ -1,9 +1,9 @@
 import { streamText, type UIMessage } from "ai";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { messages, sessions } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { getUserId } from "@/lib/auth";
 
 function extractTextFromParts(msg: UIMessage): string {
   return msg.parts
@@ -13,10 +13,7 @@ function extractTextFromParts(msg: UIMessage): string {
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const userId = getUserId();
 
   const body = await req.json();
   const { messages: uiMessages, sessionId } = body as {

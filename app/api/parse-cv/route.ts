@@ -1,15 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { sessions } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { PDFParse } from "pdf-parse";
+import { getUserId } from "@/lib/auth";
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const userId = getUserId();
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
