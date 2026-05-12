@@ -6,7 +6,7 @@ import { extractText, getMeta } from "unpdf";
 import { getUserId } from "@/lib/auth";
 
 export async function POST(req: Request) {
-  const userId = getUserId();
+  const userId = await getUserId();
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;

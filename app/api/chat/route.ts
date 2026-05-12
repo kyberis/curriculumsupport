@@ -13,7 +13,7 @@ function extractTextFromParts(msg: UIMessage): string {
 }
 
 export async function POST(req: Request) {
-  const userId = getUserId();
+  const userId = await getUserId();
 
   const body = await req.json();
   const { messages: uiMessages, sessionId } = body as {

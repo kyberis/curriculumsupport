@@ -8,7 +8,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = getUserId();
+  const userId = await getUserId();
   const { id } = await params;
 
   const [session] = await db

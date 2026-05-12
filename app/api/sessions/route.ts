@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { getUserId } from "@/lib/auth";
 
 export async function GET() {
-  const userId = getUserId();
+  const userId = await getUserId();
 
   const userSessions = await db
     .select()
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const userId = getUserId();
+  const userId = await getUserId();
 
   const body = await req.json().catch(() => ({}));
   const title = body.title || "New CV Session";

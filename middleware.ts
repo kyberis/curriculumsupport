@@ -1,12 +1,20 @@
+import { auth } from "@/lib/auth-config";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export default function middleware(req: NextRequest) {
-  // Clerk auth disabled until real credentials are configured.
-  // Re-enable by replacing this file with the clerkMiddleware version
-  // once CLERK_SECRET_KEY and NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY are set.
+const protectedPaths = ["/dashboard", "/session", "/api/chat", "/api/sessions", "/api/parse-cv"];
+
+export default auth((req) => {
+  const { pathname } = req.nextUrl;
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+
+  if (isProtected && !req.auth) {
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [

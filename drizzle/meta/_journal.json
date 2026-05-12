@@ -8,6 +8,13 @@
       "when": 1778601561093,
       "tag": "0000_equal_unicorn",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778610256004,
+      "tag": "0001_black_prism",
+      "breakpoints": true
     }
   ]
 }
