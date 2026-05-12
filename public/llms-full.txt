@@ -88,6 +88,6 @@ Yes. Connect your Telegram account from the Settings page, and you can chat with
 
 ## Links
 
-- Homepage: https://renata.vercel.app
-- Sign Up: https://renata.vercel.app/sign-up
+- Homepage: https://renata.trefolio.com
+- Sign Up: https://renata.trefolio.com/sign-up
 - GitHub: https://github.com/kyberis/curriculumsupport
