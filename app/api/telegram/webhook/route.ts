@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     if (!code) {
       await sendMessage(
         chatId,
-        "Welcome to CurriculumSupport! To link your account, generate a code from the app Settings and send `/start YOUR_CODE`."
+        "Welcome to Renata! To link your account, generate a code from the app Settings and send `/start YOUR_CODE`."
       );
       return Response.json({ ok: true });
     }
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
     await sendMessage(
       chatId,
-      "Account linked successfully! You can now chat with CurriculumSupport here. Send any message to start working on your CV."
+      "Account linked successfully! You can now chat with Renata here. Send any message to start working on your CV."
     );
     return Response.json({ ok: true });
   }
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       sessionId: activeSession.id,
       role: "assistant",
       content:
-        "Hello! I'm CurriculumSupport, your AI CV writing assistant. What role are you targeting?",
+        "Hello! I'm Renata, your AI CV writing assistant. What role are you targeting?",
     });
   }
 

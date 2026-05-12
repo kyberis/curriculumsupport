@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 
 export const siteConfig = {
-  name: "CurriculumSupport",
-  tagline: "Your CV, rewritten by an expert.",
+  name: "Renata",
+  tagline: "Your CV, reborn.",
   description:
     "An AI agent that guides you through building a professional, ATS-friendly CV — tailored to the role you want.",
 };

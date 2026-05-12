@@ -105,7 +105,7 @@ export default function SettingsPage() {
               Telegram
             </CardTitle>
             <CardDescription className="text-neutral-500">
-              Connect your Telegram account to chat with CurriculumSupport directly from Telegram.
+              Connect your Telegram account to chat with Renata directly from Telegram.
             </CardDescription>
           </CardHeader>
           <CardContent>

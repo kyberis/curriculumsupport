@@ -9,7 +9,7 @@ export function DemoChat() {
         <span className="h-3 w-3 rounded-full bg-yellow-500/60" />
         <span className="h-3 w-3 rounded-full bg-green-500/60" />
         <span className="ml-3 text-xs text-neutral-500">
-          CurriculumSupport — session
+          Renata — session
         </span>
       </div>
 

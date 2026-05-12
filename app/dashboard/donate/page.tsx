@@ -15,7 +15,8 @@ import { ArrowLeft, Heart, Copy, Check } from "lucide-react";
 
 const BTC_ADDRESS = process.env.NEXT_PUBLIC_BTC_ADDRESS;
 const ETH_ADDRESS = process.env.NEXT_PUBLIC_ETH_ADDRESS;
-const PAYPAL_DONATE_ID = process.env.NEXT_PUBLIC_PAYPAL_DONATE_ID;
+const PAYPAL_DONATE_URL =
+  "https://www.paypal.com/donate/?business=3XPK2RUCL4XFL&no_recurring=0&item_name=To+support+this+project+and+to+say+thank+you%21+%E2%9D%A4%EF%B8%8F&currency_code=EUR";
 
 type Tab = "crypto" | "paypal";
 
@@ -45,12 +46,14 @@ function CopyButton({ text }: { text: string }) {
 
 function WalletCard({
   name,
+  network,
   icon,
   address,
   uri,
   color,
 }: {
   name: string;
+  network: string;
   icon: React.ReactNode;
   address: string;
   uri: string;
@@ -58,10 +61,13 @@ function WalletCard({
 }) {
   return (
     <div className="rounded-lg border border-white/10 bg-[#0d1117] p-4">
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-1 flex items-center gap-2">
         {icon}
         <span className={`text-sm font-medium ${color}`}>{name}</span>
       </div>
+      <p className="mb-3 text-xs text-neutral-500">
+        {network} network only
+      </p>
       <div className="flex justify-center rounded-lg bg-white p-3">
         <QRCodeSVG value={uri} size={160} level="M" />
       </div>
@@ -93,7 +99,7 @@ export default function DonatePage() {
           Back to dashboard
         </Link>
         <h1 className="font-serif text-3xl text-neutral-100">
-          Support CurriculumSupport
+          Support Renata
         </h1>
       </div>
 
@@ -142,12 +148,14 @@ export default function DonatePage() {
           {tab === "crypto" && (
             <div className="space-y-4">
               <p className="text-center text-sm text-neutral-500">
-                Scan the QR code or copy the wallet address.
+                Scan the QR code or copy the wallet address. Please send only
+                on the specified network.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 {BTC_ADDRESS && (
                   <WalletCard
                     name="Bitcoin"
+                    network="Bitcoin (BTC)"
                     address={BTC_ADDRESS}
                     uri={`bitcoin:${BTC_ADDRESS}`}
                     color="text-[#F7931A]"
@@ -165,6 +173,7 @@ export default function DonatePage() {
                 {ETH_ADDRESS && (
                   <WalletCard
                     name="Ethereum"
+                    network="Ethereum (ERC-20)"
                     address={ETH_ADDRESS}
                     uri={`ethereum:${ETH_ADDRESS}`}
                     color="text-[#627EEA]"
@@ -190,12 +199,7 @@ export default function DonatePage() {
                 You&apos;ll be redirected to PayPal to complete the donation.
               </p>
               <Button
-                onClick={() => {
-                  const url = PAYPAL_DONATE_ID
-                    ? `https://www.paypal.com/donate?hosted_button_id=${PAYPAL_DONATE_ID}`
-                    : "https://www.paypal.com/donate";
-                  window.open(url, "_blank");
-                }}
+                onClick={() => window.open(PAYPAL_DONATE_URL, "_blank")}
                 className="w-full bg-[#0070BA] text-white hover:bg-[#005C99]"
               >
                 <svg

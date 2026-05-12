@@ -19,7 +19,7 @@ const garamond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "CurriculumSupport — AI CV Writing Agent",
+  title: "Renata — AI CV Writing Agent",
   description:
     "An AI-powered agent that helps you craft a professional CV through a guided conversation. Upload your existing CV, answer targeted questions, and download a polished PDF.",
 };
