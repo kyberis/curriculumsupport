@@ -118,6 +118,9 @@ export default async function HomePage() {
       />
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pb-20 pt-24 text-center">
+        <span className="mb-4 inline-block rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-xs font-medium tracking-wide text-green-400">
+          100% FREE
+        </span>
         <h1 className="font-serif text-4xl leading-tight tracking-tight text-neutral-100 sm:text-5xl md:text-6xl">
           {heroContent.headline[0]}
           <br />

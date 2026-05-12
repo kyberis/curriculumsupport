@@ -44,6 +44,7 @@ export default function SessionPage() {
   const [inputValue, setInputValue] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
+  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -51,6 +52,13 @@ export default function SessionPage() {
       api: "/api/chat",
       body: { sessionId: id },
     }),
+    onError(error) {
+      if (error.message.includes("429")) {
+        setRateLimitError(
+          "You've reached your daily message limit. Try again tomorrow."
+        );
+      }
+    },
   });
 
   useEffect(() => {
@@ -300,6 +308,11 @@ export default function SessionPage() {
 
       {/* Input */}
       <div className="border-t border-white/10 bg-[#0d1117] px-6 py-4">
+        {rateLimitError && (
+          <div className="mx-auto mb-3 max-w-3xl rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-center text-sm text-red-400">
+            {rateLimitError}
+          </div>
+        )}
         <div className="mx-auto flex max-w-3xl items-end gap-3">
           <input
             ref={fileInputRef}

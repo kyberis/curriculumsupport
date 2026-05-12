@@ -4,6 +4,7 @@ import { messages, sessions } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
 import { AI_MODEL } from "@/lib/model";
+import { checkMessageLimit } from "@/lib/rate-limits";
 import { agentTools } from "@/lib/tools";
 import { getUserId } from "@/lib/auth";
 
@@ -25,6 +26,14 @@ export async function POST(req: Request) {
 
   if (!sessionId) {
     return new Response("Missing sessionId", { status: 400 });
+  }
+
+  const { allowed, remaining } = await checkMessageLimit(userId);
+  if (!allowed) {
+    return Response.json(
+      { error: "Daily message limit reached. Try again tomorrow.", remaining },
+      { status: 429 }
+    );
   }
 
   const [session] = await db

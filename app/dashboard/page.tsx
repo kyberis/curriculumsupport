@@ -10,7 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, AlertCircle } from "lucide-react";
 import type { Session } from "@/lib/db/schema";
 
 export default function DashboardPage() {
@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [limitError, setLimitError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/sessions")
@@ -28,11 +29,18 @@ export default function DashboardPage() {
 
   async function createSession() {
     setCreating(true);
+    setLimitError(null);
     const res = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "New CV Session" }),
     });
+    if (res.status === 429) {
+      const data = await res.json();
+      setLimitError(data.error);
+      setCreating(false);
+      return;
+    }
     const session = await res.json();
     router.push(`/session/${session.id}`);
   }
@@ -57,6 +65,13 @@ export default function DashboardPage() {
           {creating ? "Creating..." : "New session"}
         </Button>
       </div>
+
+      {limitError && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          {limitError}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

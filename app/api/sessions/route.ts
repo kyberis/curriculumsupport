@@ -3,6 +3,7 @@ import { sessions, messages } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getUserId } from "@/lib/auth";
+import { checkSessionLimit } from "@/lib/rate-limits";
 
 export async function GET() {
   const userId = await getUserId();
@@ -18,6 +19,14 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const userId = await getUserId();
+
+  const { allowed, remaining } = await checkSessionLimit(userId);
+  if (!allowed) {
+    return Response.json(
+      { error: "Daily session limit reached. Try again tomorrow.", remaining },
+      { status: 429 }
+    );
+  }
 
   const body = await req.json().catch(() => ({}));
   const title = body.title || "New CV Session";
