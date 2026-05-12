@@ -106,7 +106,39 @@ export const messages = pgTable("messages", {
     .notNull(),
 });
 
+// ── Telegram integration ─────────────────────────────────────────────────────
+
+export const telegramIntegrations = pgTable("telegram_integrations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  chatId: text("chat_id").notNull().unique(),
+  username: text("username"),
+  firstName: text("first_name"),
+  linkedAt: timestamp("linked_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const telegramLinkCodes = pgTable("telegram_link_codes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+export type TelegramIntegration = typeof telegramIntegrations.$inferSelect;
+export type TelegramLinkCode = typeof telegramLinkCodes.$inferSelect;

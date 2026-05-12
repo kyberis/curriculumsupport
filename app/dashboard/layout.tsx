@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/lib/auth-config";
 import { siteConfig } from "@/lib/marketing-content";
 import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -21,6 +22,12 @@ export default async function DashboardLayout({
             {siteConfig.name}
           </Link>
           <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/settings"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Settings className="h-4 w-4" />
+            </Link>
             {session?.user?.image && (
               <img
                 src={session.user.image}

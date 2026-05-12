@@ -1,0 +1,212 @@
+import { db } from "@/lib/db";
+import {
+  telegramIntegrations,
+  telegramLinkCodes,
+  sessions,
+  messages,
+} from "@/lib/db/schema";
+import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
+import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { eq, and, gt, desc } from "drizzle-orm";
+import { generateText } from "ai";
+
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
+
+export async function POST(req: Request) {
+  if (WEBHOOK_SECRET) {
+    const token = req.headers.get("x-telegram-bot-api-secret-token");
+    if (token !== WEBHOOK_SECRET) {
+      return new Response("Forbidden", { status: 403 });
+    }
+  }
+
+  const update: TelegramUpdate = await req.json();
+
+  if (!update.message?.text) {
+    return Response.json({ ok: true });
+  }
+
+  const chatId = String(update.message.chat.id);
+  const text = update.message.text;
+  const from = update.message.from;
+
+  if (text.startsWith("/start")) {
+    const code = text.split(" ")[1]?.trim();
+    if (!code) {
+      await sendMessage(
+        chatId,
+        "Welcome to CurriculumSupport! To link your account, generate a code from the app Settings and send `/start YOUR_CODE`."
+      );
+      return Response.json({ ok: true });
+    }
+
+    const [linkCode] = await db
+      .select()
+      .from(telegramLinkCodes)
+      .where(
+        and(
+          eq(telegramLinkCodes.code, code.toUpperCase()),
+          gt(telegramLinkCodes.expiresAt, new Date())
+        )
+      );
+
+    if (!linkCode) {
+      await sendMessage(chatId, "Invalid or expired code. Please generate a new one from the app.");
+      return Response.json({ ok: true });
+    }
+
+    const [existingForUser] = await db
+      .select()
+      .from(telegramIntegrations)
+      .where(eq(telegramIntegrations.userId, linkCode.userId));
+
+    if (existingForUser) {
+      await db
+        .update(telegramIntegrations)
+        .set({
+          chatId,
+          username: from.username ?? null,
+          firstName: from.first_name,
+          linkedAt: new Date(),
+        })
+        .where(eq(telegramIntegrations.userId, linkCode.userId));
+    } else {
+      await db.insert(telegramIntegrations).values({
+        userId: linkCode.userId,
+        chatId,
+        username: from.username ?? null,
+        firstName: from.first_name,
+      });
+    }
+
+    await db
+      .delete(telegramLinkCodes)
+      .where(eq(telegramLinkCodes.userId, linkCode.userId));
+
+    await sendMessage(
+      chatId,
+      "Account linked successfully! You can now chat with CurriculumSupport here. Send any message to start working on your CV."
+    );
+    return Response.json({ ok: true });
+  }
+
+  const [integration] = await db
+    .select()
+    .from(telegramIntegrations)
+    .where(eq(telegramIntegrations.chatId, chatId));
+
+  if (!integration) {
+    await sendMessage(
+      chatId,
+      "Your account is not linked. Go to Settings in the app and connect your Telegram."
+    );
+    return Response.json({ ok: true });
+  }
+
+  const userId = integration.userId;
+
+  let [activeSession] = await db
+    .select()
+    .from(sessions)
+    .where(
+      and(
+        eq(sessions.userId, userId),
+        eq(sessions.status, "in_progress")
+      )
+    )
+    .orderBy(desc(sessions.updatedAt))
+    .limit(1);
+
+  if (!activeSession) {
+    [activeSession] = await db
+      .insert(sessions)
+      .values({
+        userId,
+        title: "Telegram Session",
+      })
+      .returning();
+
+    await db.insert(messages).values({
+      sessionId: activeSession.id,
+      role: "assistant",
+      content:
+        "Hello! I'm CurriculumSupport, your AI CV writing assistant. What role are you targeting?",
+    });
+  }
+
+  await db.insert(messages).values({
+    sessionId: activeSession.id,
+    role: "user",
+    content: text,
+  });
+
+  const dbMessages = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.sessionId, activeSession.id))
+    .orderBy(desc(messages.createdAt))
+    .limit(MAX_CONTEXT_MESSAGES);
+
+  const contextMessages = dbMessages.reverse().map((m) => ({
+    role: m.role as "user" | "assistant" | "system",
+    content: m.content,
+  }));
+
+  let systemContent = CV_SYSTEM_PROMPT;
+  if (activeSession.cvContent) {
+    systemContent += `\n\n## Uploaded CV Content\n${activeSession.cvContent}`;
+  }
+  if (activeSession.targetRole) {
+    systemContent += `\n\n## Target Role\n${activeSession.targetRole}`;
+  }
+  systemContent +=
+    "\n\nNote: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.";
+
+  try {
+    const result = await generateText({
+      model: "anthropic/claude-sonnet-4.6",
+      system: systemContent,
+      messages: contextMessages,
+    });
+
+    await db.insert(messages).values({
+      sessionId: activeSession.id,
+      role: "assistant",
+      content: result.text,
+    });
+
+    await db
+      .update(sessions)
+      .set({ updatedAt: new Date() })
+      .where(eq(sessions.id, activeSession.id));
+
+    const chunks = splitMessage(result.text, 4000);
+    for (const chunk of chunks) {
+      await sendMessage(chatId, chunk);
+    }
+  } catch {
+    await sendMessage(
+      chatId,
+      "Sorry, something went wrong processing your message. Please try again."
+    );
+  }
+
+  return Response.json({ ok: true });
+}
+
+function splitMessage(text: string, maxLen: number): string[] {
+  if (text.length <= maxLen) return [text];
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > 0) {
+    if (remaining.length <= maxLen) {
+      chunks.push(remaining);
+      break;
+    }
+    let splitAt = remaining.lastIndexOf("\n", maxLen);
+    if (splitAt < maxLen / 2) splitAt = maxLen;
+    chunks.push(remaining.slice(0, splitAt));
+    remaining = remaining.slice(splitAt).trimStart();
+  }
+  return chunks;
+}

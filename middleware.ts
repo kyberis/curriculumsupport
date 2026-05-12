@@ -1,10 +1,14 @@
 import { auth } from "@/lib/auth-config";
 import { NextResponse } from "next/server";
 
-const protectedPaths = ["/dashboard", "/session", "/api/chat", "/api/sessions", "/api/parse-cv"];
+const publicApiPaths = ["/api/telegram/webhook"];
+const protectedPaths = ["/dashboard", "/session", "/api/chat", "/api/sessions", "/api/parse-cv", "/api/settings"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+  const isPublicApi = publicApiPaths.some((p) => pathname.startsWith(p));
+  if (isPublicApi) return NextResponse.next();
+
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
 
   if (isProtected && !req.auth) {
