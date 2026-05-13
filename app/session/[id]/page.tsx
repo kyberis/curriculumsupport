@@ -18,11 +18,24 @@ import {
   FileText,
   Loader2,
   X,
+  Download,
+  Image as ImageIcon,
+  FileDown,
+  Lightbulb,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import { siteConfig } from "@/lib/marketing-content";
 import { AI_MODEL_LABEL } from "@/lib/model";
 import { DonateBanner } from "@/components/donate-banner";
 import type { Session, Message as DbMessage } from "@/lib/db/schema";
+import { toJpeg } from "html-to-image";
 
 function getMessageText(msg: UIMessage): string {
   return msg.parts
@@ -45,7 +58,9 @@ export default function SessionPage() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -97,6 +112,34 @@ export default function SessionPage() {
       }
     }
   }, [messages]);
+
+  async function exportAsJpg() {
+    if (!chatRef.current) return;
+    setExporting(true);
+    try {
+      const dataUrl = await toJpeg(chatRef.current, {
+        quality: 0.95,
+        backgroundColor: "#0d1117",
+        pixelRatio: 2,
+      });
+      const link = document.createElement("a");
+      link.download = `session-${session?.targetRole?.replace(/\s+/g, "-").toLowerCase() || id}.jpg`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      alert("Could not generate image. Try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function exportAsMd() {
+    window.open(`/api/sessions/${id}/export-md`, "_blank");
+  }
+
+  function exportTips() {
+    window.open(`/api/sessions/${id}/export-tips`, "_blank");
+  }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -248,12 +291,49 @@ export default function SessionPage() {
             </button>
           )}
         </div>
-        <div className="flex items-center gap-3" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-neutral-400 hover:text-white"
+              disabled={exporting}
+            >
+              {exporting ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-1 h-4 w-4" />
+              )}
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
+            <DropdownMenuLabel>Session</DropdownMenuLabel>
+            <DropdownMenuItem onClick={exportAsMd}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Download as Markdown
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportAsJpg}>
+              <ImageIcon className="mr-2 h-4 w-4" />
+              Download as Image (JPG)
+            </DropdownMenuItem>
+            {hasGeneratedCv && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Interview</DropdownMenuLabel>
+                <DropdownMenuItem onClick={exportTips}>
+                  <Lightbulb className="mr-2 h-4 w-4" />
+                  Download Interview Tips
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* Messages */}
       <ScrollArea ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl space-y-4 px-6 py-6">
+        <div ref={chatRef} className="mx-auto max-w-3xl space-y-4 px-6 py-6">
           {messages.map((msg) => {
             const text = getMessageText(msg);
             if (!text) return null;
