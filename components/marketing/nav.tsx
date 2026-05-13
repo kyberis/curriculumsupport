@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/marketing-content";
-import { auth } from "@/lib/auth-config";
+import { auth, signOut } from "@/lib/auth-config";
 import { MessageSquare } from "lucide-react";
 
 export async function Nav() {
@@ -17,12 +17,32 @@ export async function Nav() {
 
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
-            <Link href="/dashboard">
-              <Button className="bg-amber-600 text-white hover:bg-amber-500">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                My conversations
-              </Button>
-            </Link>
+            <>
+              <Link href="/dashboard">
+                <Button
+                  variant="ghost"
+                  className="text-neutral-300 hover:text-white"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  My conversations
+                </Button>
+              </Link>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/" });
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-neutral-400 hover:text-white"
+                >
+                  Sign out
+                </Button>
+              </form>
+            </>
           ) : (
             <>
               <Link href="/sign-in">
