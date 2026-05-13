@@ -43,6 +43,13 @@
       "when": 1778689068458,
       "tag": "0005_lying_mesmero",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778693635349,
+      "tag": "0006_lyrical_catseye",
+      "breakpoints": true
     }
   ]
 }

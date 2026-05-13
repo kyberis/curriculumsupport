@@ -12,6 +12,9 @@ import {
   DollarSign,
   Cpu,
   Zap,
+  Heart,
+  Eye,
+  MousePointerClick,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,6 +47,17 @@ interface UserSession {
   createdAt: string;
   updatedAt: string;
   messageCount: number;
+}
+
+interface DonateStats {
+  views: number;
+  viewsUnique: number;
+  clicksDonate: number;
+  clicksDonateUnique: number;
+  clicksCrypto: number;
+  clicksCryptoUnique: number;
+  clicksPaypal: number;
+  clicksPaypalUnique: number;
 }
 
 interface UsageData {
@@ -89,6 +103,7 @@ function getModelLabel(modelId: string): string {
 export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usage, setUsage] = useState<UsageData | null>(null);
+  const [donateStats, setDonateStats] = useState<DonateStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
@@ -109,10 +124,15 @@ export default function AdminPage() {
         if (!res.ok) return null;
         return res.json();
       }),
+      fetch("/api/admin/donate-events").then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      }),
     ])
-      .then(([usersData, usageData]) => {
+      .then(([usersData, usageData, donateData]) => {
         setUsers(usersData);
         setUsage(usageData);
+        setDonateStats(donateData);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -251,6 +271,93 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+
+          {/* Donate funnel */}
+          {donateStats && (
+            <div className="mb-8">
+              <h2 className="mb-4 text-lg font-semibold text-neutral-100">
+                <Heart className="mr-2 inline h-5 w-5 text-amber-400" />
+                Donaciones — Funnel
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+                      <Eye className="h-5 w-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold text-neutral-100">
+                        {donateStats.views}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        vieron la página ({donateStats.viewsUnique} únicos)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
+                      <MousePointerClick className="h-5 w-5 text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold text-neutral-100">
+                        {donateStats.clicksDonate}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        hicieron click en Donate ({donateStats.clicksDonateUnique} únicos)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F7931A]/10">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5 text-[#F7931A]"
+                        fill="currentColor"
+                      >
+                        <path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.52 2.107c-.345-.087-.7-.168-1.05-.25l.526-2.127-1.32-.33-.54 2.165c-.285-.067-.565-.13-.84-.2l-1.815-.45-.35 1.407s.975.225.955.236c.535.136.63.486.615.766l-1.477 5.92c-.075.166-.24.406-.614.314.015.02-.96-.24-.96-.24l-.66 1.51 1.71.426.93.242-.54 2.19 1.32.327.54-2.17c.36.1.705.19 1.05.273l-.51 2.154 1.32.33.545-2.19c2.24.427 3.93.257 4.64-1.774.57-1.637-.03-2.58-1.217-3.196.854-.193 1.5-.74 1.68-1.93zm-3.01 4.22c-.404 1.64-3.157.75-4.05.53l.72-2.9c.896.23 3.757.67 3.33 2.37zm.41-4.24c-.37 1.49-2.662.735-3.405.55l.654-2.64c.744.18 3.137.52 2.75 2.084z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold text-neutral-100">
+                        {donateStats.clicksCrypto}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        eligieron Crypto ({donateStats.clicksCryptoUnique} únicos)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0070BA]/10">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-5 w-5 text-[#0070BA]"
+                        fill="currentColor"
+                      >
+                        <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.145 4.876-2.274 8.005-7.268 8.005H11.43l-1.617 10.243h3.32c.46 0 .85-.334.923-.788l.038-.194.73-4.627.047-.256a.933.933 0 0 1 .923-.788h.582c3.768 0 6.715-1.53 7.577-5.957.36-1.848.174-3.39-.73-4.097z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold text-neutral-100">
+                        {donateStats.clicksPaypal}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        eligieron PayPal ({donateStats.clicksPaypalUnique} únicos)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Spending by model */}
           {usage && usage.byModel.length > 0 && (

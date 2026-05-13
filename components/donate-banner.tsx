@@ -5,6 +5,14 @@ import Link from "next/link";
 import { X, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function trackDonateEvent(eventType: string) {
+  fetch("/api/donate-events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ eventType }),
+  }).catch(() => {});
+}
+
 export function DonateBanner() {
   const [dismissed, setDismissed] = useState(false);
 
@@ -33,6 +41,7 @@ export function DonateBanner() {
                 <Button
                   size="sm"
                   className="bg-amber-600 text-white hover:bg-amber-500"
+                  onClick={() => trackDonateEvent("click_donate")}
                 >
                   <Heart className="mr-1.5 h-3.5 w-3.5" />
                   Donate

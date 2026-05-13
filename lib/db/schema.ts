@@ -156,6 +156,24 @@ export const telegramLinkCodes = pgTable("telegram_link_codes", {
     .notNull(),
 });
 
+// ── Donate analytics ────────────────────────────────────────────────────────
+
+export const donateEventTypeEnum = pgEnum("donate_event_type", [
+  "view",
+  "click_donate",
+  "click_crypto",
+  "click_paypal",
+]);
+
+export const donateEvents = pgTable("donate_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventType: donateEventTypeEnum("event_type").notNull(),
+  userId: text("user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -166,3 +184,4 @@ export type NewMessage = typeof messages.$inferInsert;
 export type UsageLog = typeof usageLogs.$inferSelect;
 export type TelegramIntegration = typeof telegramIntegrations.$inferSelect;
 export type TelegramLinkCode = typeof telegramLinkCodes.$inferSelect;
+export type DonateEvent = typeof donateEvents.$inferSelect;
