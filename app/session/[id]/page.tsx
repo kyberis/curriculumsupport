@@ -293,20 +293,22 @@ export default function SessionPage() {
           )}
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-neutral-400 hover:text-white"
-              disabled={exporting}
-            >
-              {exporting ? (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-1 h-4 w-4" />
-              )}
-              Export
-            </Button>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-neutral-400 hover:text-white"
+                disabled={exporting}
+              />
+            }
+          >
+            {exporting ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-1 h-4 w-4" />
+            )}
+            Export
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
             <DropdownMenuLabel>Session</DropdownMenuLabel>
