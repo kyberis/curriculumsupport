@@ -33,7 +33,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { siteConfig } from "@/lib/marketing-content";
-import { AI_MODEL_LABEL } from "@/lib/model";
+import { AVAILABLE_MODELS, type ModelId } from "@/lib/model";
 import { DonateBanner } from "@/components/donate-banner";
 import type { Session, Message as DbMessage } from "@/lib/db/schema";
 import { toJpeg } from "html-to-image";
@@ -441,7 +441,7 @@ export default function SessionPage() {
           </p>
         )}
         <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-neutral-600">
-          Powered by {AI_MODEL_LABEL}
+          Powered by {session?.model ? (AVAILABLE_MODELS[session.model as ModelId]?.label ?? session.model) : "AI"}
         </p>
       </div>
     </div>

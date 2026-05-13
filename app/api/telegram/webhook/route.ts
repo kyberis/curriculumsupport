@@ -4,13 +4,14 @@ import {
   telegramLinkCodes,
   sessions,
   messages,
+  usageLogs,
 } from "@/lib/db/schema";
 import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
-import { AI_MODEL } from "@/lib/model";
+import { getModelConfig } from "@/lib/model";
 import { agentTools } from "@/lib/tools";
 import { eq, and, gt, desc } from "drizzle-orm";
-import { generateText, stepCountIs } from "ai";
+import { generateText, stepCountIs, gateway } from "ai";
 
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
@@ -167,13 +168,21 @@ export async function POST(req: Request) {
   systemContent +=
     "\n\nNote: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.";
 
+  const modelConfig = getModelConfig(activeSession.model);
+
   try {
     const result = await generateText({
-      model: AI_MODEL,
+      model: gateway(activeSession.model),
       system: systemContent,
       messages: contextMessages,
       tools: agentTools,
       stopWhen: stepCountIs(5),
+      providerOptions: {
+        gateway: {
+          user: userId,
+          tags: [`model:${activeSession.model}`, "feature:telegram"],
+        },
+      },
     });
 
     await db.insert(messages).values({
@@ -203,6 +212,24 @@ export async function POST(req: Request) {
       .update(sessions)
       .set(updates)
       .where(eq(sessions.id, activeSession.id));
+
+    if (result.usage) {
+      const inTok = result.usage.inputTokens ?? 0;
+      const outTok = result.usage.outputTokens ?? 0;
+      const costCents = Math.ceil(
+        (inTok * modelConfig.inputPricePerMToken +
+          outTok * modelConfig.outputPricePerMToken) /
+          10000
+      );
+      await db.insert(usageLogs).values({
+        sessionId: activeSession.id,
+        userId,
+        model: activeSession.model,
+        inputTokens: inTok,
+        outputTokens: outTok,
+        costCents,
+      });
+    }
 
     const chunks = splitMessage(result.text, 4000);
     for (const chunk of chunks) {

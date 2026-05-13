@@ -2,7 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, ChevronDown, ChevronRight, MessageSquare, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  ChevronDown,
+  ChevronRight,
+  MessageSquare,
+  FileText,
+  DollarSign,
+  Cpu,
+  Zap,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -12,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AVAILABLE_MODELS, type ModelId } from "@/lib/model";
 
 interface AdminUser {
   id: string;
@@ -35,22 +46,74 @@ interface UserSession {
   messageCount: number;
 }
 
+interface UsageData {
+  totals: {
+    totalCostCents: number;
+    totalInputTokens: number;
+    totalOutputTokens: number;
+    totalRequests: number;
+  };
+  byModel: {
+    model: string;
+    costCents: number;
+    inputTokens: number;
+    outputTokens: number;
+    requests: number;
+  }[];
+  byUser: {
+    userId: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+    costCents: number;
+    inputTokens: number;
+    outputTokens: number;
+    requests: number;
+  }[];
+}
+
+function formatCost(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function formatTokens(tokens: number): string {
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
+  if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(1)}K`;
+  return String(tokens);
+}
+
+function getModelLabel(modelId: string): string {
+  return AVAILABLE_MODELS[modelId as ModelId]?.label ?? modelId;
+}
+
 export default function AdminPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usage, setUsage] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [userSessions, setUserSessions] = useState<Record<string, UserSession[]>>({});
+  const [userSessions, setUserSessions] = useState<
+    Record<string, UserSession[]>
+  >({});
   const [loadingSessions, setLoadingSessions] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/users")
-      .then((res) => {
-        if (res.status === 403) throw new Error("No tienes permisos de administrador");
+    Promise.all([
+      fetch("/api/admin/users").then((res) => {
+        if (res.status === 403)
+          throw new Error("No tienes permisos de administrador");
         if (!res.ok) throw new Error("Error al cargar usuarios");
         return res.json();
+      }),
+      fetch("/api/admin/usage").then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      }),
+    ])
+      .then(([usersData, usageData]) => {
+        setUsers(usersData);
+        setUsage(usageData);
       })
-      .then(setUsers)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -76,6 +139,10 @@ export default function AdminPage() {
     } finally {
       setLoadingSessions(null);
     }
+  }
+
+  function getUserCost(userId: string): number {
+    return usage?.byUser.find((u) => u.userId === userId)?.costCents ?? 0;
   }
 
   if (error) {
@@ -107,7 +174,7 @@ export default function AdminPage() {
           Administración
         </h1>
         <p className="mt-1 text-sm text-neutral-400">
-          Usuarios registrados y sus sesiones.
+          Usuarios registrados, sesiones y gasto de IA.
         </p>
       </div>
 
@@ -117,30 +184,123 @@ export default function AdminPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
-              <Users className="h-5 w-5 text-amber-400" />
+          {/* Stats cards */}
+          <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+                  <Users className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-neutral-100">
+                    {users.length}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    {users.length === 1
+                      ? "usuario registrado"
+                      : "usuarios registrados"}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-semibold text-neutral-100">
-                {users.length}
-              </p>
-              <p className="text-xs text-neutral-500">
-                {users.length === 1 ? "usuario registrado" : "usuarios registrados"}
-              </p>
+
+            <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
+                  <DollarSign className="h-5 w-5 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-neutral-100">
+                    {usage ? formatCost(usage.totals.totalCostCents) : "$0.00"}
+                  </p>
+                  <p className="text-xs text-neutral-500">gasto total</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+                  <Cpu className="h-5 w-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-neutral-100">
+                    {usage
+                      ? formatTokens(
+                          usage.totals.totalInputTokens +
+                            usage.totals.totalOutputTokens
+                        )
+                      : "0"}
+                  </p>
+                  <p className="text-xs text-neutral-500">tokens totales</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-[#161b22] p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
+                  <Zap className="h-5 w-5 text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold text-neutral-100">
+                    {usage?.totals.totalRequests ?? 0}
+                  </p>
+                  <p className="text-xs text-neutral-500">requests totales</p>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Spending by model */}
+          {usage && usage.byModel.length > 0 && (
+            <div className="mb-8">
+              <h2 className="mb-4 text-lg font-semibold text-neutral-100">
+                Gasto por modelo
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {usage.byModel.map((m) => (
+                  <div
+                    key={m.model}
+                    className="rounded-lg border border-white/10 bg-[#161b22] p-4"
+                  >
+                    <p className="text-sm font-medium text-neutral-200">
+                      {getModelLabel(m.model)}
+                    </p>
+                    <p className="mt-1 text-xl font-semibold text-neutral-100">
+                      {formatCost(m.costCents)}
+                    </p>
+                    <div className="mt-2 flex items-center gap-3 text-xs text-neutral-500">
+                      <span>{formatTokens(m.inputTokens + m.outputTokens)} tokens</span>
+                      <span>{m.requests} requests</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Users table */}
+          <h2 className="mb-4 text-lg font-semibold text-neutral-100">
+            Usuarios
+          </h2>
           <div className="overflow-hidden rounded-lg border border-white/10 bg-[#161b22]">
             <Table>
               <TableHeader>
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-neutral-400 w-8" />
+                  <TableHead className="w-8 text-neutral-400" />
                   <TableHead className="text-neutral-400">Usuario</TableHead>
                   <TableHead className="text-neutral-400">Email</TableHead>
                   <TableHead className="text-neutral-400">Rol</TableHead>
-                  <TableHead className="text-neutral-400 text-center">Sesiones</TableHead>
-                  <TableHead className="text-neutral-400">Última sesión</TableHead>
+                  <TableHead className="text-center text-neutral-400">
+                    Sesiones
+                  </TableHead>
+                  <TableHead className="text-right text-neutral-400">
+                    Gasto
+                  </TableHead>
+                  <TableHead className="text-neutral-400">
+                    Última sesión
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -193,6 +353,9 @@ export default function AdminPage() {
                       <TableCell className="text-center text-neutral-300">
                         {user.sessionCount}
                       </TableCell>
+                      <TableCell className="text-right text-neutral-300">
+                        {formatCost(getUserCost(user.id))}
+                      </TableCell>
                       <TableCell className="text-neutral-400">
                         {user.lastSessionAt
                           ? new Date(user.lastSessionAt).toLocaleDateString()
@@ -201,9 +364,12 @@ export default function AdminPage() {
                     </TableRow>
 
                     {expandedUser === user.id && (
-                      <TableRow key={`${user.id}-sessions`} className="border-white/5 hover:bg-transparent">
-                        <TableCell colSpan={6} className="p-0">
-                          <div className="border-l-2 border-amber-500/30 bg-[#0d1117]/50 px-6 py-4 ml-4">
+                      <TableRow
+                        key={`${user.id}-sessions`}
+                        className="border-white/5 hover:bg-transparent"
+                      >
+                        <TableCell colSpan={7} className="p-0">
+                          <div className="ml-4 border-l-2 border-amber-500/30 bg-[#0d1117]/50 px-6 py-4">
                             {loadingSessions === user.id ? (
                               <div className="flex items-center justify-center py-4">
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
@@ -229,8 +395,10 @@ export default function AdminPage() {
                                           {session.title}
                                         </p>
                                         <p className="text-xs text-neutral-500">
-                                          {session.targetRole || "Sin rol objetivo"}
-                                          {session.cvLanguage && ` · ${session.cvLanguage}`}
+                                          {session.targetRole ||
+                                            "Sin rol objetivo"}
+                                          {session.cvLanguage &&
+                                            ` · ${session.cvLanguage}`}
                                         </p>
                                       </div>
                                     </div>
@@ -246,10 +414,14 @@ export default function AdminPage() {
                                             : "bg-neutral-500/20 text-neutral-400"
                                         }
                                       >
-                                        {session.status === "complete" ? "Completa" : "En progreso"}
+                                        {session.status === "complete"
+                                          ? "Completa"
+                                          : "En progreso"}
                                       </Badge>
                                       <span className="text-xs text-neutral-500">
-                                        {new Date(session.createdAt).toLocaleDateString()}
+                                        {new Date(
+                                          session.createdAt
+                                        ).toLocaleDateString()}
                                       </span>
                                     </div>
                                   </div>

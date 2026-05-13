@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { messages, sessions } from "@/lib/db/schema";
 import { eq, and, gte, sql } from "drizzle-orm";
 
-export const MAX_MESSAGES_PER_DAY = 50;
 export const MAX_SESSIONS_PER_DAY = 3;
 
 function startOfTodayUTC(): Date {
@@ -10,7 +9,7 @@ function startOfTodayUTC(): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
-export async function checkMessageLimit(userId: string) {
+export async function checkMessageLimit(userId: string, dailyLimit: number) {
   const todayStart = startOfTodayUTC();
 
   const [result] = await db
@@ -27,8 +26,8 @@ export async function checkMessageLimit(userId: string) {
 
   const used = result?.count ?? 0;
   return {
-    allowed: used < MAX_MESSAGES_PER_DAY,
-    remaining: Math.max(0, MAX_MESSAGES_PER_DAY - used),
+    allowed: used < dailyLimit,
+    remaining: Math.max(0, dailyLimit - used),
   };
 }
 

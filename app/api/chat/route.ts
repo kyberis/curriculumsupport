@@ -1,9 +1,9 @@
-import { streamText, stepCountIs, type UIMessage } from "ai";
+import { streamText, stepCountIs, gateway, type UIMessage } from "ai";
 import { db } from "@/lib/db";
-import { messages, sessions } from "@/lib/db/schema";
+import { messages, sessions, usageLogs } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
-import { AI_MODEL } from "@/lib/model";
+import { getModelConfig } from "@/lib/model";
 import { checkMessageLimit } from "@/lib/rate-limits";
 import { agentTools } from "@/lib/tools";
 import { getUserId } from "@/lib/auth";
@@ -28,14 +28,6 @@ export async function POST(req: Request) {
     return new Response("Missing sessionId", { status: 400 });
   }
 
-  const { allowed, remaining } = await checkMessageLimit(userId);
-  if (!allowed) {
-    return Response.json(
-      { error: "Daily message limit reached. Try again tomorrow.", remaining },
-      { status: 429 }
-    );
-  }
-
   const [session] = await db
     .select()
     .from(sessions)
@@ -43,6 +35,19 @@ export async function POST(req: Request) {
 
   if (!session) {
     return new Response("Session not found", { status: 404 });
+  }
+
+  const modelConfig = getModelConfig(session.model);
+
+  const { allowed, remaining } = await checkMessageLimit(
+    userId,
+    modelConfig.dailyMessageLimit
+  );
+  if (!allowed) {
+    return Response.json(
+      { error: "Daily message limit reached. Try again tomorrow.", remaining },
+      { status: 429 }
+    );
   }
 
   const lastUserMessage = uiMessages[uiMessages.length - 1];
@@ -81,12 +86,18 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: AI_MODEL,
+    model: gateway(session.model),
     system: systemContent,
     messages: contextMessages,
     tools: agentTools,
     stopWhen: stepCountIs(5),
-    async onFinish({ text, steps }) {
+    providerOptions: {
+      gateway: {
+        user: userId,
+        tags: [`model:${session.model}`, "feature:chat"],
+      },
+    },
+    async onFinish({ text, steps, usage }) {
       if (!text) return;
 
       await db.insert(messages).values({
@@ -117,6 +128,24 @@ export async function POST(req: Request) {
           .update(sessions)
           .set(updates)
           .where(eq(sessions.id, sessionId));
+      }
+
+      if (usage) {
+        const inTok = usage.inputTokens ?? 0;
+        const outTok = usage.outputTokens ?? 0;
+        const costCents = Math.ceil(
+          (inTok * modelConfig.inputPricePerMToken +
+            outTok * modelConfig.outputPricePerMToken) /
+            10000
+        );
+        await db.insert(usageLogs).values({
+          sessionId,
+          userId,
+          model: session.model,
+          inputTokens: inTok,
+          outputTokens: outTok,
+          costCents,
+        });
       }
     },
   });
