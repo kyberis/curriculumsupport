@@ -45,7 +45,7 @@ Iterate → Export (MD / JPG / PDF) → Interview tips → Done
 
 | Feature | Description |
 |---------|-------------|
-| Guided CV writing | 6-step agent workflow: target role → existing CV → questions → draft → iterate → interview tips |
+| Guided CV writing | 7-step agent workflow: target role → existing CV → job description & questions → draft → gap analysis & improvement plan → iterate → interview tips |
 | PDF upload & parsing | Upload a PDF CV, text extracted server-side with `unpdf` |
 | Web search | Agent uses Tavily to research companies, roles, and industry trends |
 | Multi-model | 4 models across 3 providers, routed through Vercel AI Gateway |

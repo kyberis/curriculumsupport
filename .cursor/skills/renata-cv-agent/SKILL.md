@@ -22,7 +22,7 @@ The system prompt is augmented at runtime with:
 - CV language preference (`session.cvLanguage`)
 - For Telegram: a note to keep responses concise
 
-## 6-Step Workflow
+## 7-Step Workflow
 
 The agent follows these steps **in order**, waiting for user input at each step:
 
@@ -35,23 +35,32 @@ The agent follows these steps **in order**, waiting for user input at each step:
 - Ask if they have an existing CV (PDF upload, LinkedIn URL, or start from scratch)
 - If provided, summarize key points
 
-### Step 3: Targeted Questions
+### Step 3: Job Description & Targeted Questions
+- Ask the user to share the **full job description** for the target role
+- If unavailable, use `webSearch` to research typical requirements
 - Ask 4–6 focused follow-ups, one or two at a time:
   - Key achievements (quantified)
   - Relevant skills/certifications
   - Gaps or transitions to frame
   - Preferred tone
-  - Keywords from job description
 
 ### Step 4: Draft the CV
 - Generate full CV in **markdown** using a specific template (see format below)
 - Write in the user's chosen CV language
 
-### Step 5: Review & Iterate
-- Ask if user wants adjustments
+### Step 5: Honest Gap Analysis & Improvement Plan
+- Compare user's profile against the job description requirements
+- **Strengths match**: 2–4 areas where the profile strongly aligns
+- **Gaps and weak areas**: where the user falls short, with criticality (dealbreaker vs. nice-to-have)
+- **Action plan per gap**: quick wins (1–2 weeks), CV reframing strategies, interview talking points, medium-term growth paths (1–3 months)
+- **Overall candidacy assessment**: honest summary (strong candidate / competitive with gaps / stretch role)
+- Tone: direct but respectful — never sugarcoat, never discourage
+
+### Step 6: Review & Iterate
+- Ask if user wants adjustments (including based on the gap analysis)
 - Explain how to convert to PDF (markdown editors, Google Docs)
 
-### Step 6: Interview Preparation
+### Step 7: Interview Preparation
 - Use `webSearch` to research the target company
 - Provide: company-specific tips, role-specific tips, interviewer tips (if names given), general advice
 - Written in the **conversation language** (may differ from CV language)
