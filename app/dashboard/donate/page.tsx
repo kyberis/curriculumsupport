@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,14 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { ArrowLeft, Heart, Copy, Check } from "lucide-react";
+
+function trackDonateEvent(eventType: string) {
+  fetch("/api/donate-events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ eventType }),
+  }).catch(() => {});
+}
 
 const BTC_ADDRESS = process.env.NEXT_PUBLIC_BTC_ADDRESS;
 const ETH_ADDRESS = process.env.NEXT_PUBLIC_ETH_ADDRESS;
@@ -85,6 +93,14 @@ export default function DonatePage() {
   const [tab, setTab] = useState<Tab>(
     BTC_ADDRESS || ETH_ADDRESS ? "crypto" : "paypal"
   );
+  const tracked = useRef(false);
+
+  useEffect(() => {
+    if (!tracked.current) {
+      tracked.current = true;
+      trackDonateEvent("view");
+    }
+  }, []);
 
   const hasCrypto = BTC_ADDRESS || ETH_ADDRESS;
 
@@ -122,7 +138,10 @@ export default function DonatePage() {
           <div className="flex gap-1 rounded-lg bg-[#0d1117] p-1">
             {hasCrypto && (
               <button
-                onClick={() => setTab("crypto")}
+                onClick={() => {
+                  setTab("crypto");
+                  trackDonateEvent("click_crypto");
+                }}
                 className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   tab === "crypto"
                     ? "bg-white/10 text-neutral-100"
@@ -133,7 +152,10 @@ export default function DonatePage() {
               </button>
             )}
             <button
-              onClick={() => setTab("paypal")}
+              onClick={() => {
+                setTab("paypal");
+                trackDonateEvent("click_paypal");
+              }}
               className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 tab === "paypal"
                   ? "bg-white/10 text-neutral-100"
@@ -196,10 +218,14 @@ export default function DonatePage() {
           {tab === "paypal" && (
             <div className="space-y-4">
               <p className="text-center text-sm text-neutral-500">
-                You&apos;ll be redirected to PayPal to complete the donation.
+                Your donation helps cover the costs of running this
+                project and keeps it alive for everyone. Thank you! ❤️
               </p>
               <Button
-                onClick={() => window.open(PAYPAL_DONATE_URL, "_blank")}
+                onClick={() => {
+                  trackDonateEvent("click_paypal");
+                  window.open(PAYPAL_DONATE_URL, "_blank");
+                }}
                 className="w-full bg-[#0070BA] text-white hover:bg-[#005C99]"
               >
                 <svg
