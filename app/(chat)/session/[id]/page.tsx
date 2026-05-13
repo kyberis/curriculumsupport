@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
@@ -29,6 +29,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
@@ -46,9 +47,10 @@ function getMessageText(msg: UIMessage): string {
     .join("\n");
 }
 
-export default function SessionPage() {
+function SessionChatPageInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,9 +97,21 @@ export default function SessionPage() {
         }));
         setMessages(restored);
       })
-      .catch(() => router.push("/dashboard"))
+      .catch(() => router.push("/"))
       .finally(() => setInitialLoading(false));
   }, [id, router, setMessages]);
+
+  useEffect(() => {
+    if (initialLoading) return;
+    if (messages.length > 0) return;
+    const start = searchParams.get("start")?.trim();
+    if (!start) return;
+    const key = `renata-start-sent-${id}`;
+    if (typeof window !== "undefined" && sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    sendMessage({ text: start });
+    router.replace(`/session/${id}`, { scroll: false });
+  }, [initialLoading, searchParams, messages.length, id, sendMessage, router]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -226,7 +240,7 @@ export default function SessionPage() {
 
   if (initialLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0d1117]">
+      <div className="flex flex-1 items-center justify-center bg-[#0d1117]">
         <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
       </div>
     );
@@ -235,18 +249,18 @@ export default function SessionPage() {
   const isStreaming = status === "streaming" || status === "submitted";
 
   return (
-    <div className="flex h-screen flex-col bg-[#0d1117]">
+    <div className="flex h-full min-h-0 flex-1 flex-col bg-[#0d1117]">
       {/* Header */}
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-3">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
+          <Link href="/">
             <Button
               variant="ghost"
               size="sm"
               className="text-neutral-400 hover:text-white"
             >
               <ArrowLeft className="mr-1 h-4 w-4" />
-              Back
+              Home
             </Button>
           </Link>
           {editingTitle ? (
@@ -309,23 +323,27 @@ export default function SessionPage() {
             Export
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="bottom" sideOffset={4}>
-            <DropdownMenuLabel>Session</DropdownMenuLabel>
-            <DropdownMenuItem onClick={exportAsMd}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Download as Markdown
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={exportAsJpg}>
-              <ImageIcon className="mr-2 h-4 w-4" />
-              Download as Image (JPG)
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Session</DropdownMenuLabel>
+              <DropdownMenuItem onClick={exportAsMd}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Download as Markdown
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportAsJpg}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Download as Image (JPG)
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             {hasGeneratedCv && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Interview</DropdownMenuLabel>
-                <DropdownMenuItem onClick={exportTips}>
-                  <Lightbulb className="mr-2 h-4 w-4" />
-                  Download Interview Tips
-                </DropdownMenuItem>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Interview</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={exportTips}>
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                    Download Interview Tips
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </>
             )}
           </DropdownMenuContent>
@@ -333,7 +351,7 @@ export default function SessionPage() {
       </header>
 
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 overflow-y-auto">
+      <ScrollArea ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         <div ref={chatRef} className="mx-auto max-w-3xl space-y-4 px-6 py-6">
           {messages.map((msg) => {
             const text = getMessageText(msg);
@@ -445,5 +463,19 @@ export default function SessionPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SessionPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center bg-[#0d1117]">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        </div>
+      }
+    >
+      <SessionChatPageInner />
+    </Suspense>
   );
 }

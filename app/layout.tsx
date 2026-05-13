@@ -87,7 +87,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${garamond.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* Extensions (e.g. Grammarly) inject attributes on <body>; suppress root mismatch noise */}
+      <body
+        className="min-h-full flex flex-col"
+        suppressHydrationWarning
+      >
+        {children}
+      </body>
     </html>
   );
 }

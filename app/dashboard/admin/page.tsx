@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -412,9 +412,8 @@ export default function AdminPage() {
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <>
+                  <Fragment key={user.id}>
                     <TableRow
-                      key={user.id}
                       className="cursor-pointer border-white/5 hover:bg-white/5"
                       onClick={() => toggleUserSessions(user.id)}
                     >
@@ -472,7 +471,6 @@ export default function AdminPage() {
 
                     {expandedUser === user.id && (
                       <TableRow
-                        key={`${user.id}-sessions`}
                         className="border-white/5 hover:bg-transparent"
                       >
                         <TableCell colSpan={7} className="p-0">
@@ -539,7 +537,7 @@ export default function AdminPage() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>

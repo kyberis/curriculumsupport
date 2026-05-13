@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth-config";
+import { auth } from "@/lib/auth-config";
 import { siteConfig } from "@/lib/marketing-content";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Settings, Heart, Shield } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default async function DashboardLayout({
   children,
@@ -16,7 +17,7 @@ export default async function DashboardLayout({
       <header className="border-b border-white/10 bg-[#0d1117]/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <Link
-            href="/dashboard"
+            href="/"
             className="font-serif text-xl text-neutral-100"
           >
             {siteConfig.name}
@@ -44,21 +45,15 @@ export default async function DashboardLayout({
                 className="h-8 w-8 rounded-full"
               />
             )}
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
+            <a
+              href="/sign-out"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "text-neutral-400 hover:text-white"
+              )}
             >
-              <Button
-                type="submit"
-                variant="ghost"
-                size="sm"
-                className="text-neutral-400 hover:text-white"
-              >
-                Sign out
-              </Button>
-            </form>
+              Sign out
+            </a>
           </div>
         </div>
       </header>

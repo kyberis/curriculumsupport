@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          CLERK_SECRET_KEY: sk_test_placeholder
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+          DATABASE_URL: postgresql://user:pass@localhost:5432/renata
+          BLOB_READ_WRITE_TOKEN: vercel_blob_placeholder
+          TAVILY_API_KEY: tvly-placeholder
+          TELEGRAM_BOT_TOKEN: 000000000:placeholder
+          TELEGRAM_BOT_USERNAME: RenataBot

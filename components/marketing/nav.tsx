@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/lib/marketing-content";
-import { auth, signOut } from "@/lib/auth-config";
+import { auth } from "@/lib/auth-config";
 import { MessageSquare } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export async function Nav() {
   const session = await auth();
@@ -18,30 +19,24 @@ export async function Nav() {
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard">
+              <Link href="/">
                 <Button
                   variant="ghost"
                   className="text-neutral-300 hover:text-white"
                 >
                   <MessageSquare className="mr-2 h-4 w-4" />
-                  My conversations
+                  Home
                 </Button>
               </Link>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
+              <a
+                href="/sign-out"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "text-neutral-400 hover:text-white"
+                )}
               >
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="sm"
-                  className="text-neutral-400 hover:text-white"
-                >
-                  Sign out
-                </Button>
-              </form>
+                Sign out
+              </a>
             </>
           ) : (
             <>

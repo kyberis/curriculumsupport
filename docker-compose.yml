@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: renata-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: renata
+      POSTGRES_PASSWORD: renata
+      POSTGRES_DB: renata
+    volumes:
+      - renata_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renata -d renata"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  renata_pgdata:

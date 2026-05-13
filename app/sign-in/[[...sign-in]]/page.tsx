@@ -8,7 +8,22 @@ export const metadata: Metadata = {
     "Sign in to Renata to start building your professional, ATS-friendly CV with AI guidance.",
 };
 
-export default function SignInPage() {
+function safeCallbackUrl(raw: unknown): string {
+  if (typeof raw !== "string") return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("://")) {
+    return "/";
+  }
+  return raw;
+}
+
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const { callbackUrl: raw } = await searchParams;
+  const callbackUrl = safeCallbackUrl(raw);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0d1117]">
       <div className="w-full max-w-sm rounded-lg border border-white/10 bg-[#161b22] p-8 text-center">
@@ -21,7 +36,7 @@ export default function SignInPage() {
         <form
           action={async () => {
             "use server";
-            await signIn("google", { redirectTo: "/dashboard" });
+            await signIn("google", { redirectTo: callbackUrl });
           }}
         >
           <Button

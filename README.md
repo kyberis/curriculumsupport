@@ -33,7 +33,7 @@ Renata asks targeted questions to draw out what matters — key achievements, re
 | UI | React 19, Tailwind CSS 4, [Base UI](https://base-ui.com) |
 | AI | [Vercel AI SDK](https://sdk.vercel.ai), Claude Sonnet |
 | Auth | [NextAuth.js](https://next-auth.js.org) v5 (Google OAuth) |
-| Database | PostgreSQL via [Neon](https://neon.tech), [Drizzle ORM](https://orm.drizzle.team) |
+| Database | PostgreSQL (local Docker or [Neon](https://neon.tech)), [Drizzle ORM](https://orm.drizzle.team) |
 | Search | [Tavily](https://tavily.com) API |
 | PDF parsing | [unpdf](https://github.com/unjs/unpdf) |
 
@@ -42,7 +42,7 @@ Renata asks targeted questions to draw out what matters — key achievements, re
 ### Prerequisites
 
 - Node.js 20+
-- A [Neon](https://neon.tech) PostgreSQL database (or any Postgres-compatible provider)
+- Docker (for local PostgreSQL) **or** a hosted Postgres such as [Neon](https://neon.tech)
 - Google OAuth credentials
 - (Optional) [Tavily](https://tavily.com) API key for web search
 - (Optional) Telegram bot token
@@ -65,8 +65,8 @@ Required variables:
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | Neon pooled connection string |
-| `DATABASE_URL_UNPOOLED` | Direct connection string (used for migrations) |
+| `DATABASE_URL` | Postgres connection string (app runtime; local Docker: see `.env.example`) |
+| `DATABASE_URL_UNPOOLED` | Direct connection string for `drizzle-kit migrate` (same as `DATABASE_URL` locally) |
 | `AUTH_SECRET` | NextAuth secret (generate with `npx auth secret`) |
 | `AUTH_GOOGLE_ID` | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
@@ -84,7 +84,16 @@ Optional variables:
 
 ### Database
 
-Run migrations to set up the schema:
+**Local (Docker):**
+
+```bash
+docker compose up -d
+npm run db:migrate
+```
+
+Set `DATABASE_URL` and `DATABASE_URL_UNPOOLED` in `.env.local` (see `.env.example`; defaults match `docker-compose.yml`).
+
+**Migrations** (any environment):
 
 ```bash
 npm run db:migrate
