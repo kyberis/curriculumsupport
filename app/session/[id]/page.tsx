@@ -7,7 +7,8 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -294,14 +295,11 @@ export default function SessionPage() {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-neutral-400 hover:text-white"
-                disabled={exporting}
-              />
-            }
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "text-neutral-400 hover:text-white"
+            )}
+            disabled={exporting}
           >
             {exporting ? (
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
