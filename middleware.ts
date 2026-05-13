@@ -2,7 +2,8 @@ import { auth } from "@/lib/auth-config";
 import { NextResponse } from "next/server";
 
 const publicApiPaths = ["/api/telegram/webhook"];
-const protectedPaths = ["/dashboard", "/session", "/api/chat", "/api/sessions", "/api/parse-cv", "/api/settings"];
+const protectedPaths = ["/dashboard", "/session", "/api/chat", "/api/sessions", "/api/parse-cv", "/api/settings", "/api/admin"];
+const adminPaths = ["/dashboard/admin", "/api/admin"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -15,6 +16,11 @@ export default auth((req) => {
     const signInUrl = new URL("/sign-in", req.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
+  }
+
+  const isAdmin = adminPaths.some((p) => pathname.startsWith(p));
+  if (isAdmin && req.auth?.user?.role !== "admin") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   return NextResponse.next();

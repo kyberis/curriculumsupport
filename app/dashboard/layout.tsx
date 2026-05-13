@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/lib/auth-config";
 import { siteConfig } from "@/lib/marketing-content";
 import { Button } from "@/components/ui/button";
-import { Settings, Heart } from "lucide-react";
+import { Settings, Heart, Shield } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +22,15 @@ export default async function DashboardLayout({
             {siteConfig.name}
           </Link>
           <div className="flex items-center gap-3">
+            {session?.user?.role === "admin" && (
+              <Link
+                href="/dashboard/admin"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-amber-400/70 transition-colors hover:bg-amber-500/10 hover:text-amber-400"
+                title="Admin"
+              >
+                <Shield className="h-4 w-4" />
+              </Link>
+            )}
             <Link
               href="/dashboard/settings"
               className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"

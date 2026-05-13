@@ -11,6 +11,8 @@ import type { AdapterAccountType } from "next-auth/adapters";
 
 // ── NextAuth tables ──────────────────────────────────────────────────────────
 
+export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
+
 export const users = pgTable("users", {
   id: text("id")
     .primaryKey()
@@ -19,6 +21,7 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
+  role: userRoleEnum("role").notNull().default("user"),
 });
 
 export const accounts = pgTable(
@@ -137,6 +140,7 @@ export const telegramLinkCodes = pgTable("telegram_link_codes", {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 export type Message = typeof messages.$inferSelect;
