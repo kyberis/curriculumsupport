@@ -18,7 +18,9 @@ import {
   MessageSquare,
   Hash,
   Activity,
+  Sparkles,
 } from "lucide-react";
+import { RenataMeshyPresence } from "@/components/admin/renata-meshy-presence";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -127,6 +129,9 @@ export default function AdminSessionViewPage() {
 
   return (
     <div className="flex min-h-[70vh] flex-col">
+      <div className="mb-6 grid gap-6 xl:grid-cols-[minmax(300px,400px)_1fr] xl:items-start">
+        <RenataMeshyPresence messages={messages} />
+        <div className="min-w-0 space-y-6">
       <div className="mb-6">
         <Link
           href="/dashboard/admin"
@@ -313,11 +318,12 @@ export default function AdminSessionViewPage() {
                         <Info className="h-4 w-4" />
                       </div>
                     ) : (
-                      <img
-                        src="/renata-avatar.png"
-                        alt="Renata"
-                        className="mr-2.5 mt-1 h-7 w-7 flex-shrink-0 rounded-full"
-                      />
+                      <div
+                        className="mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-500"
+                        title="Renata (vista 3D a la izquierda)"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </div>
                     ))}
                   <div
                     className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
@@ -347,6 +353,8 @@ export default function AdminSessionViewPage() {
               );
             })
           )}
+        </div>
+      </div>
         </div>
       </div>
 
