@@ -107,7 +107,13 @@ Defined in `lib/tools/`:
 - Searches for company info, role requirements, industry trends
 - Returns up to 5 results + AI summary
 - Agent should use proactively when user mentions a company or role
-- Never searches for user's personal information
+- Do not use to look up the user's own name or background; use `fetchLinkedInProfile` for LinkedIn URLs they paste
+
+### `fetchLinkedInProfile` (`lib/tools/fetch-linkedin-profile.ts`)
+- Uses **Tavily Extract** (`POST https://api.tavily.com/extract`, same `TAVILY_API_KEY`)
+- Allowed URLs: `linkedin.com/in/...` and `linkedin.com/pub/...` only
+- Returns markdown/plain text from the public page (truncated if very long)
+- If extraction fails (login wall, etc.), the agent asks for PDF, export, or pasted text
 
 ### `setCvLanguage` (`lib/tools/set-cv-language.ts`)
 - Records the user's preferred CV language

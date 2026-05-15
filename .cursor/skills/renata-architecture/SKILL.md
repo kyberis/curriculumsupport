@@ -89,6 +89,7 @@ lib/
 ├── tools/
 │   ├── index.ts                     # Tool exports
 │   ├── web-search.ts               # Tavily web search tool
+│   ├── fetch-linkedin-profile.ts   # Tavily Extract for LinkedIn /in/ and /pub/ URLs
 │   └── set-cv-language.ts          # CV language recording tool
 └── utils.ts                         # cn() utility
 
