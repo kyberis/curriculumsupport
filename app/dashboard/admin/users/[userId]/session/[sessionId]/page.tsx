@@ -19,8 +19,9 @@ import {
   Hash,
   Activity,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { Message as DbMessage, Session } from "@/lib/db/schema";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/model";
 
@@ -114,9 +115,12 @@ export default function AdminSessionViewPage() {
     return (
       <div className="flex flex-col items-center py-16 text-center">
         <p className="text-red-400">{error}</p>
-        <Button variant="ghost" className="mt-4" asChild>
-          <Link href="/dashboard/admin">Volver a administración</Link>
-        </Button>
+        <Link
+          href="/dashboard/admin"
+          className={cn(buttonVariants({ variant: "ghost" }), "mt-4")}
+        >
+          Volver a administración
+        </Link>
       </div>
     );
   }
