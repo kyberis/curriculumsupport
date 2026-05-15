@@ -528,6 +528,13 @@ export default function AdminPage() {
                                           session.createdAt
                                         ).toLocaleDateString()}
                                       </span>
+                                      <Link
+                                        href={`/dashboard/admin/users/${user.id}/session/${session.id}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-xs font-medium text-amber-400/90 underline-offset-2 transition-colors hover:text-amber-300 hover:underline"
+                                      >
+                                        Ver conversación
+                                      </Link>
                                     </div>
                                   </div>
                                 ))}
