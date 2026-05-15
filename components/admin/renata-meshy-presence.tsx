@@ -21,7 +21,7 @@ export function RenataMeshyPresence({ messages }: { messages: DbMessage[] }) {
   const [taskId, setTaskId] = useState<string | null>(null);
   const [poll, setPoll] = useState<MeshyPoll | null>(null);
   const [busy, setBusy] = useState(false);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollIntervalRef = useRef<number | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [pulse, setPulse] = useState(0);
   const rafRef = useRef(0);
@@ -51,8 +51,8 @@ export function RenataMeshyPresence({ messages }: { messages: DbMessage[] }) {
   }, []);
 
   const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
+    if (pollIntervalRef.current != null) {
+      window.clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
   }, []);
