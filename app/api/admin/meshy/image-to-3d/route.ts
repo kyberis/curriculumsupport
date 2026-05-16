@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       ai_model: "meshy-5",
       should_texture: true,
       target_formats: ["glb"],
-      model_type: "lowpoly",
+      model_type: "standard",
     });
     return NextResponse.json({ taskId });
   } catch (e) {

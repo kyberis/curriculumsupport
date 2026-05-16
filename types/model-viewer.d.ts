@@ -1,6 +1,7 @@
-import type { DOMAttributes } from "react";
+import type { DOMAttributes, Ref } from "react";
 
 type ModelViewerProps = DOMAttributes<HTMLElement> & {
+  ref?: Ref<HTMLElement | null>;
   className?: string;
   src?: string;
   alt?: string;

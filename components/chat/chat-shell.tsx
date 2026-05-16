@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, MessageSquare, Plus, Shield } from "lucide-react";
@@ -16,6 +22,12 @@ export type ChatShellUser = {
   image?: string | null;
   role?: string;
 };
+
+const ChatShellUserContext = createContext<ChatShellUser | null>(null);
+
+export function useChatShellUser(): ChatShellUser | null {
+  return useContext(ChatShellUserContext);
+}
 
 export function ChatShell({
   user,
@@ -42,8 +54,8 @@ export function ChatShell({
 
   useEffect(() => {
     if (!user) {
-      setSessions([]);
-      return;
+      const t = window.setTimeout(() => setSessions([]), 0);
+      return () => window.clearTimeout(t);
     }
     loadSessions();
   }, [loadSessions, pathname, user]);
@@ -277,7 +289,9 @@ export function ChatShell({
           </Button>
           <span className="font-serif text-lg text-neutral-100">{siteConfig.name}</span>
         </div>
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+        <ChatShellUserContext.Provider value={user}>
+          <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+        </ChatShellUserContext.Provider>
       </div>
 
       {user ? (

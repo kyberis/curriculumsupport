@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -24,6 +24,8 @@ import {
   Image as ImageIcon,
   FileDown,
   Lightbulb,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,6 +41,12 @@ import { AVAILABLE_MODELS, type ModelId } from "@/lib/model";
 import { DonateBanner } from "@/components/donate-banner";
 import type { Session, Message as DbMessage } from "@/lib/db/schema";
 import { toJpeg } from "html-to-image";
+import { useChatShellUser } from "@/components/chat/chat-shell";
+import {
+  RenataAvatarPanel,
+  type RenataAvatarPanelHandle,
+} from "@/components/chat/renata-avatar-panel";
+import { useSpeechRecognitionToText } from "@/lib/use-speech-recognition";
 
 function getMessageText(msg: UIMessage): string {
   return msg.parts
@@ -65,6 +73,11 @@ function SessionChatPageInner() {
   const [exporting, setExporting] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+  const shellUser = useChatShellUser();
+  const isAdmin = shellUser?.role === "admin";
+  const [avatarMode, setAvatarMode] = useState(false);
+  const avatarPanelRef = useRef<RenataAvatarPanelHandle>(null);
+  const avatarModeRef = useRef(false);
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -78,7 +91,56 @@ function SessionChatPageInner() {
         );
       }
     },
+    onFinish({ message, isAbort, isError }) {
+      if (isAbort || isError) return;
+      if (message.role !== "assistant") return;
+      if (!avatarModeRef.current) return;
+      const t = getMessageText(message);
+      if (t.trim()) avatarPanelRef.current?.speakPlainText(t);
+    },
   });
+
+  const [micError, setMicError] = useState<string | null>(null);
+  const { supported: micSupported, listening: micListening, start: startMic, stop: stopMic } =
+    useSpeechRecognitionToText({
+      lang: "es-ES",
+      onFinal: (text) => {
+        avatarPanelRef.current?.cancelSpeech();
+        sendMessage({ text });
+      },
+      onError: (msg) => setMicError(msg),
+    });
+
+  const panelMessages = useMemo(
+    () =>
+      messages.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: getMessageText(m),
+      })),
+    [messages]
+  );
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const t = window.setTimeout(() => {
+      if (sessionStorage.getItem(`renata_avatar_mode_${id}`) === "1") {
+        setAvatarMode(true);
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [id, isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (typeof window === "undefined") return;
+    if (avatarMode) sessionStorage.setItem(`renata_avatar_mode_${id}`, "1");
+    else sessionStorage.removeItem(`renata_avatar_mode_${id}`);
+  }, [avatarMode, id, isAdmin]);
+
+  useEffect(() => {
+    avatarModeRef.current = Boolean(isAdmin && avatarMode);
+  }, [isAdmin, avatarMode]);
 
   useEffect(() => {
     fetch(`/api/sessions/${id}`)
@@ -121,12 +183,11 @@ function SessionChatPageInner() {
 
   useEffect(() => {
     const lastAssistant = messages.findLast((m) => m.role === "assistant");
-    if (lastAssistant) {
-      const text = getMessageText(lastAssistant);
-      if (text.includes("## Experience")) {
-        setHasGeneratedCv(true);
-      }
-    }
+    if (!lastAssistant) return;
+    const text = getMessageText(lastAssistant);
+    if (!text.includes("## Experience")) return;
+    const t = window.setTimeout(() => setHasGeneratedCv(true), 0);
+    return () => window.clearTimeout(t);
   }, [messages]);
 
   async function exportAsJpg() {
@@ -193,8 +254,19 @@ function SessionChatPageInner() {
   function handleSend() {
     const text = inputValue.trim();
     if (!text) return;
+    avatarPanelRef.current?.cancelSpeech();
     setInputValue("");
     sendMessage({ text });
+  }
+
+  function toggleMic() {
+    setMicError(null);
+    if (micListening) {
+      stopMic();
+      return;
+    }
+    avatarPanelRef.current?.cancelSpeech();
+    startMic();
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -247,6 +319,7 @@ function SessionChatPageInner() {
   }
 
   const isStreaming = status === "streaming" || status === "submitted";
+  const effectiveAvatarMode = Boolean(isAdmin && avatarMode);
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col bg-[#0d1117]">
@@ -306,6 +379,17 @@ function SessionChatPageInner() {
               <Pencil className="h-3.5 w-3.5 text-neutral-500 opacity-0 transition-opacity group-hover:opacity-100" />
             </button>
           )}
+          {isAdmin ? (
+            <label className="ml-2 flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-neutral-300 hover:bg-white/10 sm:ml-4 sm:text-sm">
+              <input
+                type="checkbox"
+                checked={avatarMode}
+                onChange={(e) => setAvatarMode(e.target.checked)}
+                className="rounded border-white/30 bg-[#161b22]"
+              />
+              Modo avatar
+            </label>
+          ) : null}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -350,8 +434,28 @@ function SessionChatPageInner() {
         </DropdownMenu>
       </header>
 
-      {/* Messages */}
-      <ScrollArea ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-3 overflow-hidden",
+          effectiveAvatarMode &&
+            "xl:grid xl:grid-cols-[minmax(260px,380px)_1fr] xl:items-stretch xl:gap-4 xl:px-4"
+        )}
+      >
+        {effectiveAvatarMode ? (
+          <div className="min-h-0 shrink-0 overflow-y-auto border-b border-white/10 px-4 pb-3 xl:border-b-0 xl:px-0 xl:pb-0">
+            <RenataAvatarPanel
+              ref={avatarPanelRef}
+              messages={panelMessages}
+              meshyStorageKey={`renata_session_meshy_${id}`}
+              compact
+              assistantBusy={isStreaming}
+            />
+          </div>
+        ) : null}
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {/* Messages */}
+          <ScrollArea ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
         <div ref={chatRef} className="mx-auto max-w-3xl space-y-4 px-6 py-6">
           {messages.map((msg) => {
             const text = getMessageText(msg);
@@ -407,6 +511,17 @@ function SessionChatPageInner() {
 
       {/* Input */}
       <div className="border-t border-white/10 bg-[#0d1117] px-6 py-4">
+        {effectiveAvatarMode && micSupported === false ? (
+          <p className="mx-auto mb-2 max-w-3xl text-center text-xs text-amber-400/90">
+            El reconocimiento de voz no está disponible en este navegador. Usa
+            Chrome en escritorio o escribe con el teclado.
+          </p>
+        ) : null}
+        {micError ? (
+          <div className="mx-auto mb-2 max-w-3xl rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-center text-xs text-red-400">
+            {micError}
+          </div>
+        ) : null}
         {rateLimitError && (
           <div className="mx-auto mb-3 max-w-3xl rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-center text-sm text-red-400">
             {rateLimitError}
@@ -435,6 +550,30 @@ function SessionChatPageInner() {
               <Paperclip className="h-5 w-5" />
             )}
           </Button>
+          {effectiveAvatarMode && micSupported !== false ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isStreaming}
+              onClick={toggleMic}
+              className={cn(
+                "text-neutral-400 hover:text-white",
+                micListening && "text-amber-400"
+              )}
+              title={
+                micListening
+                  ? "Detener micrófono"
+                  : "Hablar (reconocimiento de voz)"
+              }
+            >
+              {micListening ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </Button>
+          ) : null}
           <Textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
@@ -461,6 +600,8 @@ function SessionChatPageInner() {
         <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-neutral-600">
           Powered by {session?.model ? (AVAILABLE_MODELS[session.model as ModelId]?.label ?? session.model) : "AI"}
         </p>
+      </div>
+        </div>
       </div>
     </div>
   );
