@@ -76,10 +76,12 @@ function SessionChatPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomAnchorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prependingOlderRef = useRef(false);
   const scrollHeightBeforePrependRef = useRef(0);
   const shouldStickToBottomRef = useRef(true);
+  const initialScrollDoneRef = useRef(false);
 
   const [session, setSession] = useState<Session | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -163,6 +165,23 @@ function SessionChatPageInner() {
     avatarModeRef.current = Boolean(isAdmin && avatarMode);
   }, [isAdmin, avatarMode]);
 
+  const scrollToBottom = useCallback(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    bottomAnchorRef.current?.scrollIntoView({ block: "end" });
+    scrollEl.scrollTop = scrollEl.scrollHeight;
+  }, []);
+
+  useEffect(() => {
+    setInitialLoading(true);
+    setHasMoreOlder(false);
+    setSession(null);
+    setMessages([]);
+    shouldStickToBottomRef.current = true;
+    initialScrollDoneRef.current = false;
+  }, [id, setMessages]);
+
   useEffect(() => {
     fetch(`/api/sessions/${id}?limit=${CHAT_MESSAGES_PAGE_SIZE}`)
       .then((res) => {
@@ -180,6 +199,7 @@ function SessionChatPageInner() {
           setHasMoreOlder(data.hasMoreMessages);
           setMessages(dbMessagesToUi(data.messages));
           shouldStickToBottomRef.current = true;
+          initialScrollDoneRef.current = false;
         }
       )
       .catch(() => router.push("/"))
@@ -233,6 +253,8 @@ function SessionChatPageInner() {
   }, [initialLoading, searchParams, messages.length, id, sendMessage, router]);
 
   useLayoutEffect(() => {
+    if (initialLoading) return;
+
     const scrollEl = scrollRef.current;
     if (!scrollEl) return;
 
@@ -245,13 +267,40 @@ function SessionChatPageInner() {
     }
 
     if (shouldStickToBottomRef.current) {
-      scrollEl.scrollTop = scrollEl.scrollHeight;
+      scrollToBottom();
     }
-  }, [messages]);
+  }, [initialLoading, messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (initialLoading) return;
+
+    const frame = requestAnimationFrame(() => {
+      if (!shouldStickToBottomRef.current) return;
+      scrollToBottom();
+      initialScrollDoneRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [initialLoading, messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (initialLoading) return;
+
+    const chatEl = chatRef.current;
+    const scrollEl = scrollRef.current;
+    if (!chatEl || !scrollEl) return;
+
+    const observer = new ResizeObserver(() => {
+      if (!shouldStickToBottomRef.current) return;
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+    });
+    observer.observe(chatEl);
+    return () => observer.disconnect();
+  }, [initialLoading, id]);
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
-    if (!scrollEl) return;
+    if (!scrollEl || initialLoading) return;
 
     function onScroll() {
       const el = scrollRef.current;
@@ -260,14 +309,19 @@ function SessionChatPageInner() {
       shouldStickToBottomRef.current =
         el.scrollHeight - el.scrollTop - el.clientHeight < 120;
 
-      if (el.scrollTop < 80 && hasMoreOlder && !loadingOlder) {
+      if (
+        initialScrollDoneRef.current &&
+        el.scrollTop < 80 &&
+        hasMoreOlder &&
+        !loadingOlder
+      ) {
         void loadOlderMessages();
       }
     }
 
     scrollEl.addEventListener("scroll", onScroll, { passive: true });
     return () => scrollEl.removeEventListener("scroll", onScroll);
-  }, [hasMoreOlder, loadOlderMessages, loadingOlder]);
+  }, [hasMoreOlder, initialLoading, loadOlderMessages, loadingOlder]);
 
   useEffect(() => {
     const lastAssistant = messages.findLast((m) => m.role === "assistant");
@@ -607,6 +661,7 @@ function SessionChatPageInner() {
               </div>
             </div>
           )}
+          <div ref={bottomAnchorRef} aria-hidden className="h-px shrink-0" />
         </div>
           </div>
 
