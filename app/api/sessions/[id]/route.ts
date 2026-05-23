@@ -1,15 +1,27 @@
 import { db } from "@/lib/db";
 import { sessions, messages } from "@/lib/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, desc, lt } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getUserId } from "@/lib/auth";
+import { CHAT_MESSAGES_PAGE_SIZE } from "@/lib/agent";
+
+const MAX_PAGE_SIZE = 100;
+
+function parsePageLimit(raw: string | null): number {
+  const parsed = raw ? Number.parseInt(raw, 10) : CHAT_MESSAGES_PAGE_SIZE;
+  if (!Number.isFinite(parsed) || parsed < 1) return CHAT_MESSAGES_PAGE_SIZE;
+  return Math.min(parsed, MAX_PAGE_SIZE);
+}
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getUserId();
   const { id } = await params;
+  const { searchParams } = new URL(req.url);
+  const limit = parsePageLimit(searchParams.get("limit"));
+  const beforeId = searchParams.get("before");
 
   const [session] = await db
     .select()
@@ -20,13 +32,30 @@ export async function GET(
     return new Response("Session not found", { status: 404 });
   }
 
-  const sessionMessages = await db
+  const messageConditions = [eq(messages.sessionId, id)];
+
+  if (beforeId) {
+    const [cursor] = await db
+      .select({ createdAt: messages.createdAt })
+      .from(messages)
+      .where(and(eq(messages.id, beforeId), eq(messages.sessionId, id)));
+
+    if (cursor) {
+      messageConditions.push(lt(messages.createdAt, cursor.createdAt));
+    }
+  }
+
+  const batch = await db
     .select()
     .from(messages)
-    .where(eq(messages.sessionId, id))
-    .orderBy(asc(messages.createdAt));
+    .where(and(...messageConditions))
+    .orderBy(desc(messages.createdAt))
+    .limit(limit + 1);
 
-  return NextResponse.json({ session, messages: sessionMessages });
+  const hasMoreMessages = batch.length > limit;
+  const sessionMessages = batch.slice(0, limit).reverse();
+
+  return NextResponse.json({ session, messages: sessionMessages, hasMoreMessages });
 }
 
 export async function PATCH(

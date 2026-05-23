@@ -142,3 +142,6 @@ Do NOT use \`webSearch\` to look up the user's own name or personal background. 
 - Format your CV output in markdown so it renders cleanly.`;
 
 export const MAX_CONTEXT_MESSAGES = 40;
+
+/** Messages loaded per page in the chat UI (newest first, scroll up for older). */
+export const CHAT_MESSAGES_PAGE_SIZE = 30;

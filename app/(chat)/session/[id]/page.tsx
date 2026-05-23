@@ -1,6 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -10,7 +18,6 @@ import remarkGfm from "remark-gfm";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
   Check,
@@ -38,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { siteConfig } from "@/lib/marketing-content";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/model";
+import { CHAT_MESSAGES_PAGE_SIZE } from "@/lib/agent";
 import { DonateBanner } from "@/components/donate-banner";
 import type { Session, Message as DbMessage } from "@/lib/db/schema";
 import { toJpeg } from "html-to-image";
@@ -55,15 +63,28 @@ function getMessageText(msg: UIMessage): string {
     .join("\n");
 }
 
+function dbMessagesToUi(rows: DbMessage[]): UIMessage[] {
+  return rows.map((m) => ({
+    id: m.id,
+    role: m.role as "user" | "assistant",
+    parts: [{ type: "text" as const, text: m.content }],
+  }));
+}
+
 function SessionChatPageInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prependingOlderRef = useRef(false);
+  const scrollHeightBeforePrependRef = useRef(0);
+  const shouldStickToBottomRef = useRef(true);
 
   const [session, setSession] = useState<Session | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [hasMoreOlder, setHasMoreOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [hasGeneratedCv, setHasGeneratedCv] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -143,25 +164,61 @@ function SessionChatPageInner() {
   }, [isAdmin, avatarMode]);
 
   useEffect(() => {
-    fetch(`/api/sessions/${id}`)
+    fetch(`/api/sessions/${id}?limit=${CHAT_MESSAGES_PAGE_SIZE}`)
       .then((res) => {
         if (!res.ok) throw new Error("Not found");
         return res.json();
       })
-      .then((data: { session: Session; messages: DbMessage[] }) => {
-        setSession(data.session);
-        setHasGeneratedCv(!!data.session.generatedCv);
-
-        const restored: UIMessage[] = data.messages.map((m) => ({
-          id: m.id,
-          role: m.role as "user" | "assistant",
-          parts: [{ type: "text" as const, text: m.content }],
-        }));
-        setMessages(restored);
-      })
+      .then(
+        (data: {
+          session: Session;
+          messages: DbMessage[];
+          hasMoreMessages: boolean;
+        }) => {
+          setSession(data.session);
+          setHasGeneratedCv(!!data.session.generatedCv);
+          setHasMoreOlder(data.hasMoreMessages);
+          setMessages(dbMessagesToUi(data.messages));
+          shouldStickToBottomRef.current = true;
+        }
+      )
       .catch(() => router.push("/"))
       .finally(() => setInitialLoading(false));
   }, [id, router, setMessages]);
+
+  const loadOlderMessages = useCallback(async () => {
+    if (loadingOlder || !hasMoreOlder) return;
+
+    const oldestId = messages[0]?.id;
+    if (!oldestId) return;
+
+    const scrollEl = scrollRef.current;
+    if (scrollEl) {
+      scrollHeightBeforePrependRef.current = scrollEl.scrollHeight;
+    }
+    prependingOlderRef.current = true;
+    setLoadingOlder(true);
+
+    try {
+      const res = await fetch(
+        `/api/sessions/${id}?limit=${CHAT_MESSAGES_PAGE_SIZE}&before=${oldestId}`
+      );
+      if (!res.ok) return;
+
+      const data: { messages: DbMessage[]; hasMoreMessages: boolean } =
+        await res.json();
+      const older = dbMessagesToUi(data.messages);
+      if (older.length === 0) {
+        setHasMoreOlder(false);
+        return;
+      }
+
+      setMessages((prev) => [...older, ...prev]);
+      setHasMoreOlder(data.hasMoreMessages);
+    } finally {
+      setLoadingOlder(false);
+    }
+  }, [hasMoreOlder, id, loadingOlder, messages, setMessages]);
 
   useEffect(() => {
     if (initialLoading) return;
@@ -175,11 +232,42 @@ function SessionChatPageInner() {
     router.replace(`/session/${id}`, { scroll: false });
   }, [initialLoading, searchParams, messages.length, id, sendMessage, router]);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  useLayoutEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    if (prependingOlderRef.current) {
+      const delta =
+        scrollEl.scrollHeight - scrollHeightBeforePrependRef.current;
+      scrollEl.scrollTop += delta;
+      prependingOlderRef.current = false;
+      return;
+    }
+
+    if (shouldStickToBottomRef.current) {
+      scrollEl.scrollTop = scrollEl.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    function onScroll() {
+      const el = scrollRef.current;
+      if (!el) return;
+
+      shouldStickToBottomRef.current =
+        el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+
+      if (el.scrollTop < 80 && hasMoreOlder && !loadingOlder) {
+        void loadOlderMessages();
+      }
+    }
+
+    scrollEl.addEventListener("scroll", onScroll, { passive: true });
+    return () => scrollEl.removeEventListener("scroll", onScroll);
+  }, [hasMoreOlder, loadOlderMessages, loadingOlder]);
 
   useEffect(() => {
     const lastAssistant = messages.findLast((m) => m.role === "assistant");
@@ -256,6 +344,7 @@ function SessionChatPageInner() {
     if (!text) return;
     avatarPanelRef.current?.cancelSpeech();
     setInputValue("");
+    shouldStickToBottomRef.current = true;
     sendMessage({ text });
   }
 
@@ -454,9 +543,23 @@ function SessionChatPageInner() {
         ) : null}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {/* Messages */}
-          <ScrollArea ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+          {/* Messages — newest at bottom; scroll up to load older */}
+          <div
+            ref={scrollRef}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          >
         <div ref={chatRef} className="mx-auto max-w-3xl space-y-4 px-6 py-6">
+          {(loadingOlder || hasMoreOlder) && messages.length > 0 ? (
+            <div className="flex justify-center py-2">
+              {loadingOlder ? (
+                <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+              ) : (
+                <span className="text-xs text-neutral-600">
+                  Scroll up for earlier messages
+                </span>
+              )}
+            </div>
+          ) : null}
           {messages.map((msg) => {
             const text = getMessageText(msg);
             if (!text) return null;
@@ -505,7 +608,7 @@ function SessionChatPageInner() {
             </div>
           )}
         </div>
-      </ScrollArea>
+          </div>
 
       {hasGeneratedCv && <DonateBanner />}
 
