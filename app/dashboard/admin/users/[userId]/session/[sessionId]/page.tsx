@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Hash,
   Brain,
+  Activity,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
