@@ -10,7 +10,9 @@ import { getUserId } from "@/lib/auth";
 import {
   buildSessionSystemContent,
   getRecentContextMessages,
+  getUserProfileSummary,
   maybeUpdateConversationSummary,
+  updateCrossSessionMemory,
 } from "@/lib/conversation-summary";
 
 function extractTextFromParts(msg: UIMessage): string {
@@ -68,7 +70,13 @@ export async function POST(req: Request) {
   }
 
   const dbMessages = await getRecentContextMessages(sessionId);
-  const systemContent = buildSessionSystemContent(session, CV_SYSTEM_PROMPT);
+  const profileSummary = await getUserProfileSummary(userId);
+  const systemContent = buildSessionSystemContent(
+    session,
+    CV_SYSTEM_PROMPT,
+    undefined,
+    profileSummary
+  );
 
   const result = streamText({
     model: gateway(session.model),
@@ -134,6 +142,9 @@ export async function POST(req: Request) {
       }
 
       await maybeUpdateConversationSummary(sessionId, userId);
+      await updateCrossSessionMemory(sessionId, userId, {
+        forceSessionSummary: !!updates.generatedCv,
+      });
     },
   });
 

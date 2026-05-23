@@ -13,7 +13,9 @@ import { agentTools } from "@/lib/tools";
 import {
   buildSessionSystemContent,
   getRecentContextMessages,
+  getUserProfileSummary,
   maybeUpdateConversationSummary,
+  updateCrossSessionMemory,
 } from "@/lib/conversation-summary";
 import { eq, and, gt, desc } from "drizzle-orm";
 import { generateText, stepCountIs, gateway } from "ai";
@@ -149,10 +151,12 @@ export async function POST(req: Request) {
   });
 
   const contextMessages = await getRecentContextMessages(activeSession.id);
+  const profileSummary = await getUserProfileSummary(userId);
   const systemContent = buildSessionSystemContent(
     activeSession,
     CV_SYSTEM_PROMPT,
-    "Note: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks."
+    "Note: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.",
+    profileSummary
   );
 
   const modelConfig = getModelConfig(activeSession.model);
@@ -219,6 +223,9 @@ export async function POST(req: Request) {
     }
 
     await maybeUpdateConversationSummary(activeSession.id, userId);
+    await updateCrossSessionMemory(activeSession.id, userId, {
+      forceSessionSummary: !!updates.generatedCv,
+    });
 
     const chunks = splitMessage(result.text, 4000);
     for (const chunk of chunks) {

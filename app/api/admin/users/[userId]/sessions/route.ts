@@ -23,6 +23,7 @@ export async function GET(
       targetRole: sessions.targetRole,
       status: sessions.status,
       cvLanguage: sessions.cvLanguage,
+      sessionSummary: sessions.sessionSummary,
       createdAt: sessions.createdAt,
       updatedAt: sessions.updatedAt,
       messageCount: sql<number>`count(${messages.id})::int`,

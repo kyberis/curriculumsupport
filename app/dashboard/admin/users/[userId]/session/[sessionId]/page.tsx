@@ -17,10 +17,8 @@ import {
   FileText,
   MessageSquare,
   Hash,
-  Activity,
-  Sparkles,
+  Brain,
 } from "lucide-react";
-import { RenataMeshyPresence } from "@/components/admin/renata-meshy-presence";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -129,9 +127,7 @@ export default function AdminSessionViewPage() {
 
   return (
     <div className="flex min-h-[70vh] flex-col">
-      <div className="mb-6 grid gap-6 xl:grid-cols-[minmax(300px,400px)_1fr] xl:items-start">
-        <RenataMeshyPresence messages={messages} />
-        <div className="min-w-0 space-y-6">
+      <div className="mb-6 space-y-6">
       <div className="mb-6">
         <Link
           href="/dashboard/admin"
@@ -288,6 +284,18 @@ export default function AdminSessionViewPage() {
         </div>
       )}
 
+      {session?.sessionSummary?.trim() && (
+        <div className="mb-6 rounded-lg border border-white/10 bg-[#161b22] p-4">
+          <p className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-neutral-500">
+            <Brain className="h-3.5 w-3.5" />
+            Resumen de sesión (memoria compartida)
+          </p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+            {session.sessionSummary}
+          </p>
+        </div>
+      )}
+
       <div
         ref={scrollRef}
         className="max-h-[min(70vh,calc(100vh-16rem))] min-h-[320px] flex-1 overflow-y-auto rounded-lg border border-white/10 bg-[#161b22]"
@@ -318,12 +326,11 @@ export default function AdminSessionViewPage() {
                         <Info className="h-4 w-4" />
                       </div>
                     ) : (
-                      <div
-                        className="mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-500"
-                        title="Renata (vista 3D a la izquierda)"
-                      >
-                        <Sparkles className="h-4 w-4" />
-                      </div>
+                      <img
+                        src="/renata-avatar.png"
+                        alt="Renata"
+                        className="mr-2.5 mt-1 h-7 w-7 flex-shrink-0 rounded-full"
+                      />
                     ))}
                   <div
                     className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
@@ -355,7 +362,6 @@ export default function AdminSessionViewPage() {
           )}
         </div>
       </div>
-        </div>
       </div>
 
       <p className="mt-4 text-center text-xs text-neutral-600">

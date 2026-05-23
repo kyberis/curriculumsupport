@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   role: userRoleEnum("role").notNull().default("user"),
+  profileSummary: text("profile_summary"),
 });
 
 export const accounts = pgTable(
@@ -92,6 +93,10 @@ export const sessions = pgTable("sessions", {
   cvLanguage: text("cv_language"),
   conversationSummary: text("conversation_summary"),
   summaryUpToCount: integer("summary_up_to_count").notNull().default(0),
+  sessionSummary: text("session_summary"),
+  sessionSummaryUserMsgCount: integer("session_summary_user_msg_count")
+    .notNull()
+    .default(0),
   status: sessionStatusEnum("status").notNull().default("in_progress"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

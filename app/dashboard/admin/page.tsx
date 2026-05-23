@@ -15,8 +15,11 @@ import {
   Heart,
   Eye,
   MousePointerClick,
+  Brain,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -44,9 +47,20 @@ interface UserSession {
   targetRole: string | null;
   status: "in_progress" | "complete";
   cvLanguage: string | null;
+  sessionSummary: string | null;
   createdAt: string;
   updatedAt: string;
   messageCount: number;
+}
+
+interface UserMemory {
+  profileSummary: string | null;
+  sessionSummaries: {
+    id: string;
+    title: string;
+    sessionSummary: string | null;
+    updatedAt: string;
+  }[];
 }
 
 interface DonateStats {
@@ -111,6 +125,9 @@ export default function AdminPage() {
     Record<string, UserSession[]>
   >({});
   const [loadingSessions, setLoadingSessions] = useState<string | null>(null);
+  const [userMemory, setUserMemory] = useState<Record<string, UserMemory>>({});
+  const [loadingMemory, setLoadingMemory] = useState<string | null>(null);
+  const [clearingMemory, setClearingMemory] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -146,18 +163,82 @@ export default function AdminPage() {
 
     setExpandedUser(userId);
 
-    if (userSessions[userId]) return;
+    const loadSessions = userSessions[userId]
+      ? Promise.resolve(userSessions[userId])
+      : fetch(`/api/admin/users/${userId}/sessions`)
+          .then((res) => {
+            if (!res.ok) throw new Error("Error al cargar sesiones");
+            return res.json() as Promise<UserSession[]>;
+          })
+          .then((sessions) => {
+            setUserSessions((prev) => ({ ...prev, [userId]: sessions }));
+            return sessions;
+          });
+
+    const loadMemory = userMemory[userId]
+      ? Promise.resolve(userMemory[userId])
+      : fetch(`/api/admin/users/${userId}/memory`)
+          .then((res) => {
+            if (!res.ok) throw new Error("Error al cargar memoria");
+            return res.json() as Promise<UserMemory>;
+          })
+          .then((memory) => {
+            setUserMemory((prev) => ({ ...prev, [userId]: memory }));
+            return memory;
+          });
 
     setLoadingSessions(userId);
+    setLoadingMemory(userId);
+
     try {
-      const res = await fetch(`/api/admin/users/${userId}/sessions`);
-      if (!res.ok) throw new Error("Error al cargar sesiones");
-      const sessions = await res.json();
-      setUserSessions((prev) => ({ ...prev, [userId]: sessions }));
+      await Promise.all([loadSessions, loadMemory]);
     } catch {
-      setUserSessions((prev) => ({ ...prev, [userId]: [] }));
+      if (!userSessions[userId]) {
+        setUserSessions((prev) => ({ ...prev, [userId]: [] }));
+      }
+      if (!userMemory[userId]) {
+        setUserMemory((prev) => ({
+          ...prev,
+          [userId]: { profileSummary: null, sessionSummaries: [] },
+        }));
+      }
     } finally {
       setLoadingSessions(null);
+      setLoadingMemory(null);
+    }
+  }
+
+  async function clearUserMemory(userId: string) {
+    if (
+      !confirm(
+        "¿Borrar toda la memoria entre sesiones de este usuario? Renata dejará de recordar conversaciones anteriores."
+      )
+    ) {
+      return;
+    }
+
+    setClearingMemory(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/memory`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error al borrar memoria");
+
+      setUserMemory((prev) => ({
+        ...prev,
+        [userId]: { profileSummary: null, sessionSummaries: [] },
+      }));
+      setUserSessions((prev) => ({
+        ...prev,
+        [userId]: (prev[userId] ?? []).map((s) => ({
+          ...s,
+          sessionSummary: null,
+        })),
+      }));
+    } catch {
+      alert("No se pudo borrar la memoria. Intenta de nuevo.");
+    } finally {
+      setClearingMemory(null);
     }
   }
 
@@ -475,69 +556,122 @@ export default function AdminPage() {
                       >
                         <TableCell colSpan={7} className="p-0">
                           <div className="ml-4 border-l-2 border-amber-500/30 bg-[#0d1117]/50 px-6 py-4">
-                            {loadingSessions === user.id ? (
+                            {loadingSessions === user.id ||
+                            loadingMemory === user.id ? (
                               <div className="flex items-center justify-center py-4">
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
                               </div>
-                            ) : !userSessions[user.id]?.length ? (
-                              <p className="py-2 text-sm text-neutral-500">
-                                Este usuario no tiene sesiones.
-                              </p>
                             ) : (
-                              <div className="space-y-2">
-                                <p className="mb-3 text-xs font-medium uppercase tracking-wider text-neutral-500">
-                                  Sesiones ({userSessions[user.id].length})
-                                </p>
-                                {userSessions[user.id].map((session) => (
-                                  <div
-                                    key={session.id}
-                                    className="flex items-center justify-between rounded-lg border border-white/5 bg-[#161b22] px-4 py-3"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <FileText className="h-4 w-4 text-neutral-500" />
-                                      <div>
-                                        <p className="text-sm text-neutral-200">
-                                          {session.title}
-                                        </p>
-                                        <p className="text-xs text-neutral-500">
-                                          {session.targetRole ||
-                                            "Sin rol objetivo"}
-                                          {session.cvLanguage &&
-                                            ` · ${session.cvLanguage}`}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                      <div className="flex items-center gap-1 text-xs text-neutral-500">
-                                        <MessageSquare className="h-3 w-3" />
-                                        {session.messageCount}
-                                      </div>
-                                      <Badge
-                                        className={
-                                          session.status === "complete"
-                                            ? "bg-green-500/20 text-green-400"
-                                            : "bg-neutral-500/20 text-neutral-400"
-                                        }
+                              <div className="space-y-4">
+                                <div className="rounded-lg border border-white/5 bg-[#161b22] p-4">
+                                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                    <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-neutral-500">
+                                      <Brain className="h-3.5 w-3.5" />
+                                      Memoria entre sesiones
+                                    </p>
+                                    {(userMemory[user.id]?.profileSummary ||
+                                      (userMemory[user.id]?.sessionSummaries
+                                        .length ?? 0) > 0) && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                        disabled={clearingMemory === user.id}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          clearUserMemory(user.id);
+                                        }}
                                       >
-                                        {session.status === "complete"
-                                          ? "Completa"
-                                          : "En progreso"}
-                                      </Badge>
-                                      <span className="text-xs text-neutral-500">
-                                        {new Date(
-                                          session.createdAt
-                                        ).toLocaleDateString()}
-                                      </span>
-                                      <Link
-                                        href={`/dashboard/admin/users/${user.id}/session/${session.id}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="text-xs font-medium text-amber-400/90 underline-offset-2 transition-colors hover:text-amber-300 hover:underline"
-                                      >
-                                        Ver conversación
-                                      </Link>
-                                    </div>
+                                        <Trash2 className="mr-1 h-3 w-3" />
+                                        {clearingMemory === user.id
+                                          ? "Borrando…"
+                                          : "Borrar memoria"}
+                                      </Button>
+                                    )}
                                   </div>
-                                ))}
+                                  {userMemory[user.id]?.profileSummary ? (
+                                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-300">
+                                      {userMemory[user.id].profileSummary}
+                                    </p>
+                                  ) : (
+                                    <p className="text-sm text-neutral-500">
+                                      Sin perfil consolidado aún. Se genera
+                                      automáticamente conforme el usuario
+                                      conversa en distintas sesiones.
+                                    </p>
+                                  )}
+                                </div>
+
+                                {!userSessions[user.id]?.length ? (
+                                  <p className="py-2 text-sm text-neutral-500">
+                                    Este usuario no tiene sesiones.
+                                  </p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+                                      Sesiones ({userSessions[user.id].length})
+                                    </p>
+                                    {userSessions[user.id].map((session) => (
+                                      <div
+                                        key={session.id}
+                                        className="rounded-lg border border-white/5 bg-[#161b22] px-4 py-3"
+                                      >
+                                        <div className="flex items-center justify-between gap-3">
+                                          <div className="flex items-center gap-3">
+                                            <FileText className="h-4 w-4 shrink-0 text-neutral-500" />
+                                            <div>
+                                              <p className="text-sm text-neutral-200">
+                                                {session.title}
+                                              </p>
+                                              <p className="text-xs text-neutral-500">
+                                                {session.targetRole ||
+                                                  "Sin rol objetivo"}
+                                                {session.cvLanguage &&
+                                                  ` · ${session.cvLanguage}`}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <div className="flex shrink-0 items-center gap-4">
+                                            <div className="flex items-center gap-1 text-xs text-neutral-500">
+                                              <MessageSquare className="h-3 w-3" />
+                                              {session.messageCount}
+                                            </div>
+                                            <Badge
+                                              className={
+                                                session.status === "complete"
+                                                  ? "bg-green-500/20 text-green-400"
+                                                  : "bg-neutral-500/20 text-neutral-400"
+                                              }
+                                            >
+                                              {session.status === "complete"
+                                                ? "Completa"
+                                                : "En progreso"}
+                                            </Badge>
+                                            <span className="text-xs text-neutral-500">
+                                              {new Date(
+                                                session.createdAt
+                                              ).toLocaleDateString()}
+                                            </span>
+                                            <Link
+                                              href={`/dashboard/admin/users/${user.id}/session/${session.id}`}
+                                              onClick={(e) =>
+                                                e.stopPropagation()
+                                              }
+                                              className="text-xs font-medium text-amber-400/90 underline-offset-2 transition-colors hover:text-amber-300 hover:underline"
+                                            >
+                                              Ver conversación
+                                            </Link>
+                                          </div>
+                                        </div>
+                                        {session.sessionSummary?.trim() && (
+                                          <p className="mt-3 border-t border-white/5 pt-3 text-xs leading-relaxed text-neutral-400">
+                                            {session.sessionSummary}
+                                          </p>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
