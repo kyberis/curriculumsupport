@@ -143,5 +143,8 @@ Do NOT use \`webSearch\` to look up the user's own name or personal background. 
 
 export const MAX_CONTEXT_MESSAGES = 40;
 
+/** Rolling summary checkpoint interval — matches context window size. */
+export const SUMMARY_INTERVAL = MAX_CONTEXT_MESSAGES;
+
 /** Messages loaded per page in the chat UI (newest first, scroll up for older). */
 export const CHAT_MESSAGES_PAGE_SIZE = 30;

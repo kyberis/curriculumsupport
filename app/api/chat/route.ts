@@ -1,12 +1,17 @@
 import { streamText, stepCountIs, gateway, type UIMessage } from "ai";
 import { db } from "@/lib/db";
 import { messages, sessions, usageLogs } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
-import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { eq, and } from "drizzle-orm";
+import { CV_SYSTEM_PROMPT } from "@/lib/agent";
 import { getModelConfig } from "@/lib/model";
 import { checkMessageLimit } from "@/lib/rate-limits";
 import { agentTools } from "@/lib/tools";
 import { getUserId } from "@/lib/auth";
+import {
+  buildSessionSystemContent,
+  getRecentContextMessages,
+  maybeUpdateConversationSummary,
+} from "@/lib/conversation-summary";
 
 function extractTextFromParts(msg: UIMessage): string {
   return msg.parts
@@ -62,33 +67,13 @@ export async function POST(req: Request) {
     }
   }
 
-  const dbMessages = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.sessionId, sessionId))
-    .orderBy(desc(messages.createdAt))
-    .limit(MAX_CONTEXT_MESSAGES);
-
-  const contextMessages = dbMessages.reverse().map((m) => ({
-    role: m.role as "user" | "assistant" | "system",
-    content: m.content,
-  }));
-
-  let systemContent = CV_SYSTEM_PROMPT;
-  if (session.cvContent) {
-    systemContent += `\n\n## Uploaded CV Content\nThe user uploaded the following CV:\n\n${session.cvContent}`;
-  }
-  if (session.targetRole) {
-    systemContent += `\n\n## Target Role\nThe user is targeting: ${session.targetRole}`;
-  }
-  if (session.cvLanguage) {
-    systemContent += `\n\n## CV Language\nThe user wants the CV written in: ${session.cvLanguage}`;
-  }
+  const dbMessages = await getRecentContextMessages(sessionId);
+  const systemContent = buildSessionSystemContent(session, CV_SYSTEM_PROMPT);
 
   const result = streamText({
     model: gateway(session.model),
     system: systemContent,
-    messages: contextMessages,
+    messages: dbMessages,
     tools: agentTools,
     stopWhen: stepCountIs(5),
     providerOptions: {
@@ -147,6 +132,8 @@ export async function POST(req: Request) {
           costCents,
         });
       }
+
+      await maybeUpdateConversationSummary(sessionId, userId);
     },
   });
 

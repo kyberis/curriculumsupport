@@ -50,6 +50,13 @@
       "when": 1778693635349,
       "tag": "0006_lyrical_catseye",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779547418036,
+      "tag": "0007_silent_norman_osborn",
+      "breakpoints": true
     }
   ]
 }

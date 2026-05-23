@@ -90,6 +90,8 @@ export const sessions = pgTable("sessions", {
   cvContent: text("cv_content"),
   generatedCv: text("generated_cv"),
   cvLanguage: text("cv_language"),
+  conversationSummary: text("conversation_summary"),
+  summaryUpToCount: integer("summary_up_to_count").notNull().default(0),
   status: sessionStatusEnum("status").notNull().default("in_progress"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

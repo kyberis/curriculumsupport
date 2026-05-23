@@ -7,9 +7,14 @@ import {
   usageLogs,
 } from "@/lib/db/schema";
 import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
-import { CV_SYSTEM_PROMPT, MAX_CONTEXT_MESSAGES } from "@/lib/agent";
+import { CV_SYSTEM_PROMPT } from "@/lib/agent";
 import { getModelConfig } from "@/lib/model";
 import { agentTools } from "@/lib/tools";
+import {
+  buildSessionSystemContent,
+  getRecentContextMessages,
+  maybeUpdateConversationSummary,
+} from "@/lib/conversation-summary";
 import { eq, and, gt, desc } from "drizzle-orm";
 import { generateText, stepCountIs, gateway } from "ai";
 
@@ -143,30 +148,12 @@ export async function POST(req: Request) {
     content: text,
   });
 
-  const dbMessages = await db
-    .select()
-    .from(messages)
-    .where(eq(messages.sessionId, activeSession.id))
-    .orderBy(desc(messages.createdAt))
-    .limit(MAX_CONTEXT_MESSAGES);
-
-  const contextMessages = dbMessages.reverse().map((m) => ({
-    role: m.role as "user" | "assistant" | "system",
-    content: m.content,
-  }));
-
-  let systemContent = CV_SYSTEM_PROMPT;
-  if (activeSession.cvContent) {
-    systemContent += `\n\n## Uploaded CV Content\n${activeSession.cvContent}`;
-  }
-  if (activeSession.targetRole) {
-    systemContent += `\n\n## Target Role\n${activeSession.targetRole}`;
-  }
-  if (activeSession.cvLanguage) {
-    systemContent += `\n\n## CV Language\nThe user wants the CV written in: ${activeSession.cvLanguage}`;
-  }
-  systemContent +=
-    "\n\nNote: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.";
+  const contextMessages = await getRecentContextMessages(activeSession.id);
+  const systemContent = buildSessionSystemContent(
+    activeSession,
+    CV_SYSTEM_PROMPT,
+    "Note: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks."
+  );
 
   const modelConfig = getModelConfig(activeSession.model);
 
@@ -230,6 +217,8 @@ export async function POST(req: Request) {
         costCents,
       });
     }
+
+    await maybeUpdateConversationSummary(activeSession.id, userId);
 
     const chunks = splitMessage(result.text, 4000);
     for (const chunk of chunks) {
