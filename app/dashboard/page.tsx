@@ -14,6 +14,7 @@ import { Plus, FileText } from "lucide-react";
 import type { Session } from "@/lib/db/schema";
 import { AVAILABLE_MODELS, type ModelId } from "@/lib/model";
 import { ModelPickerDialog } from "@/components/chat/model-picker-dialog";
+import { DeleteSessionButton } from "@/components/chat/delete-session-button";
 
 export default function DashboardPage() {
   return (
@@ -55,6 +56,10 @@ function DashboardContent() {
   function getModelLabel(modelId: string) {
     const m = AVAILABLE_MODELS[modelId as ModelId];
     return m?.label ?? modelId;
+  }
+
+  function onSessionDeleted(deletedId: string) {
+    setSessions((prev) => prev.filter((s) => s.id !== deletedId));
   }
 
   return (
@@ -101,26 +106,34 @@ function DashboardContent() {
           {sessions.map((session) => (
             <Card
               key={session.id}
-              className="cursor-pointer border-white/10 bg-[#161b22] transition-colors hover:border-amber-500/30"
+              className="group cursor-pointer border-white/10 bg-[#161b22] transition-colors hover:border-amber-500/30"
               onClick={() => router.push(`/session/${session.id}`)}
             >
               <CardHeader>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-neutral-100">
                     {session.title}
                   </CardTitle>
-                  <Badge
-                    variant={
-                      session.status === "complete" ? "default" : "secondary"
-                    }
-                    className={
-                      session.status === "complete"
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-neutral-500/20 text-neutral-400"
-                    }
-                  >
-                    {session.status === "complete" ? "Complete" : "In progress"}
-                  </Badge>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Badge
+                      variant={
+                        session.status === "complete" ? "default" : "secondary"
+                      }
+                      className={
+                        session.status === "complete"
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-neutral-500/20 text-neutral-400"
+                      }
+                    >
+                      {session.status === "complete" ? "Complete" : "In progress"}
+                    </Badge>
+                    <DeleteSessionButton
+                      sessionId={session.id}
+                      sessionTitle={session.title}
+                      onDeleted={() => onSessionDeleted(session.id)}
+                      className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                    />
+                  </div>
                 </div>
                 <CardDescription className="text-neutral-500">
                   {session.targetRole || "No target role set"}

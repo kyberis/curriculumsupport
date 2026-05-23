@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, MessageSquare, Plus, Shield } from "lucide-react";
 import type { Session } from "@/lib/db/schema";
 import { ModelPickerDialog } from "@/components/chat/model-picker-dialog";
+import { DeleteSessionButton } from "@/components/chat/delete-session-button";
 import { siteConfig } from "@/lib/marketing-content";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,13 @@ export function ChatShell({
     ? pathname.slice("/session/".length).split("/")[0] ?? null
     : null;
 
+  function onSessionDeleted(deletedId: string) {
+    setSessions((prev) => prev.filter((s) => s.id !== deletedId));
+    if (sessionIdFromPath === deletedId) {
+      router.push("/");
+    }
+  }
+
   function formatSessionDate(d: Date | string) {
     const date = typeof d === "string" ? new Date(d) : d;
     const now = new Date();
@@ -168,30 +176,43 @@ export function ChatShell({
               sessions.map((s) => {
                 const active = sessionIdFromPath === s.id;
                 return (
-                  <Link
+                  <div
                     key={s.id}
-                    href={`/session/${s.id}`}
-                    onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "mb-0.5 flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors",
-                      active
-                        ? "bg-amber-500/15 text-amber-100"
-                        : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
+                      "group mb-0.5 flex items-start gap-1 rounded-lg pr-1 transition-colors",
+                      active ? "bg-amber-500/15" : "hover:bg-white/5"
                     )}
                   >
-                    <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 opacity-80" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{s.title}</span>
-                      <span
-                        className={cn(
-                          "text-xs",
-                          active ? "text-amber-200/60" : "text-neutral-500"
-                        )}
-                      >
-                        {formatSessionDate(s.updatedAt ?? s.createdAt)}
+                    <Link
+                      href={`/session/${s.id}`}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "flex min-w-0 flex-1 items-start gap-2.5 rounded-lg px-2.5 py-2.5 text-left text-sm transition-colors",
+                        active
+                          ? "text-amber-100"
+                          : "text-neutral-400 group-hover:text-neutral-100"
+                      )}
+                    >
+                      <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 opacity-80" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{s.title}</span>
+                        <span
+                          className={cn(
+                            "text-xs",
+                            active ? "text-amber-200/60" : "text-neutral-500"
+                          )}
+                        >
+                          {formatSessionDate(s.updatedAt ?? s.createdAt)}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
+                    </Link>
+                    <DeleteSessionButton
+                      sessionId={s.id}
+                      sessionTitle={s.title}
+                      onDeleted={() => onSessionDeleted(s.id)}
+                      className="mt-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                    />
+                  </div>
                 );
               })
             )}

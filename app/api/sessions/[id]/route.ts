@@ -90,3 +90,24 @@ export async function PATCH(
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const userId = await getUserId();
+  const { id } = await params;
+
+  const [session] = await db
+    .select({ id: sessions.id })
+    .from(sessions)
+    .where(and(eq(sessions.id, id), eq(sessions.userId, userId)));
+
+  if (!session) {
+    return new Response("Session not found", { status: 404 });
+  }
+
+  await db.delete(sessions).where(eq(sessions.id, id));
+
+  return new Response(null, { status: 204 });
+}
