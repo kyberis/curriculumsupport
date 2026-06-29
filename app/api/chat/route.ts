@@ -14,6 +14,7 @@ import {
   maybeUpdateConversationSummary,
   updateCrossSessionMemory,
 } from "@/lib/conversation-summary";
+import { buildLinkedInContextFromMessage } from "@/lib/linkedin";
 
 function extractTextFromParts(msg: UIMessage): string {
   return msg.parts
@@ -58,23 +59,27 @@ export async function POST(req: Request) {
   }
 
   const lastUserMessage = uiMessages[uiMessages.length - 1];
+  let lastUserText = "";
   if (lastUserMessage?.role === "user") {
-    const text = extractTextFromParts(lastUserMessage);
-    if (text) {
+    lastUserText = extractTextFromParts(lastUserMessage);
+    if (lastUserText) {
       await db.insert(messages).values({
         sessionId,
         role: "user",
-        content: text,
+        content: lastUserText,
       });
     }
   }
 
   const dbMessages = await getRecentContextMessages(sessionId);
   const profileSummary = await getUserProfileSummary(userId);
+  const linkedInContext = lastUserText
+    ? await buildLinkedInContextFromMessage(lastUserText)
+    : undefined;
   const systemContent = buildSessionSystemContent(
     session,
     CV_SYSTEM_PROMPT,
-    undefined,
+    linkedInContext,
     profileSummary
   );
 

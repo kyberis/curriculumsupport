@@ -382,9 +382,10 @@ function SessionChatPageInner() {
       }
 
       const data = await res.json();
-      setInputValue(
-        `I've uploaded my CV (${data.pages} page${data.pages > 1 ? "s" : ""}). Please review it and start asking me questions.`
-      );
+      const uploadMessage = `I've uploaded my CV (${data.pages} page${data.pages > 1 ? "s" : ""}). Please review it and start asking me questions.`;
+      setInputValue("");
+      shouldStickToBottomRef.current = true;
+      sendMessage({ text: uploadMessage });
     } catch {
       alert("Failed to upload file. Please try again.");
     } finally {
@@ -689,7 +690,7 @@ function SessionChatPageInner() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,application/pdf,application/octet-stream"
             className="hidden"
             onChange={handleFileUpload}
           />

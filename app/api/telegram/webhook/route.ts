@@ -17,6 +17,7 @@ import {
   maybeUpdateConversationSummary,
   updateCrossSessionMemory,
 } from "@/lib/conversation-summary";
+import { buildLinkedInContextFromMessage } from "@/lib/linkedin";
 import { eq, and, gt, desc } from "drizzle-orm";
 import { generateText, stepCountIs, gateway } from "ai";
 
@@ -152,10 +153,17 @@ export async function POST(req: Request) {
 
   const contextMessages = await getRecentContextMessages(activeSession.id);
   const profileSummary = await getUserProfileSummary(userId);
+  const linkedInContext = await buildLinkedInContextFromMessage(text);
+  const telegramNotes = [
+    "Note: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.",
+    linkedInContext,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const systemContent = buildSessionSystemContent(
     activeSession,
     CV_SYSTEM_PROMPT,
-    "Note: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.",
+    telegramNotes,
     profileSummary
   );
 

@@ -16,7 +16,10 @@ export async function POST(req: Request) {
     return new Response("Missing file or sessionId", { status: 400 });
   }
 
-  if (file.type !== "application/pdf") {
+  const isPdf =
+    file.type === "application/pdf" ||
+    file.name.toLowerCase().endsWith(".pdf");
+  if (!isPdf) {
     return new Response("Only PDF files are supported", { status: 400 });
   }
 
