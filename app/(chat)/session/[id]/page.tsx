@@ -603,7 +603,7 @@ function SessionChatPageInner() {
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
           >
-        <div ref={chatRef} className="mx-auto max-w-3xl space-y-4 px-6 py-6">
+        <div ref={chatRef} className="w-full space-y-4 px-6 py-6">
           {(loadingOlder || hasMoreOlder) && messages.length > 0 ? (
             <div className="flex justify-center py-2">
               {loadingOlder ? (
@@ -621,7 +621,7 @@ function SessionChatPageInner() {
             return (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "assistant" && (
                   <img
@@ -631,10 +631,10 @@ function SessionChatPageInner() {
                   />
                 )}
                 <div
-                  className={`max-w-[85%] rounded-lg px-4 py-3 text-sm leading-relaxed ${
+                  className={`rounded-lg px-4 py-3 text-sm leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-amber-600/20 text-amber-100"
-                      : "bg-white/5 text-neutral-300"
+                      ? "max-w-[85%] bg-amber-600/20 text-amber-100"
+                      : "min-w-0 flex-1 bg-white/5 text-neutral-300"
                   }`}
                 >
                   {msg.role === "assistant" ? (
@@ -671,22 +671,22 @@ function SessionChatPageInner() {
       {/* Input */}
       <div className="border-t border-white/10 bg-[#0d1117] px-6 py-4">
         {effectiveAvatarMode && micSupported === false ? (
-          <p className="mx-auto mb-2 max-w-3xl text-center text-xs text-amber-400/90">
+          <p className="mb-2 text-center text-xs text-amber-400/90">
             El reconocimiento de voz no está disponible en este navegador. Usa
             Chrome en escritorio o escribe con el teclado.
           </p>
         ) : null}
         {micError ? (
-          <div className="mx-auto mb-2 max-w-3xl rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-center text-xs text-red-400">
+          <div className="mb-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-center text-xs text-red-400">
             {micError}
           </div>
         ) : null}
         {rateLimitError && (
-          <div className="mx-auto mb-3 max-w-3xl rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-center text-sm text-red-400">
+          <div className="mb-3 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-center text-sm text-red-400">
             {rateLimitError}
           </div>
         )}
-        <div className="mx-auto flex max-w-3xl items-end gap-3">
+        <div className="flex w-full items-end gap-3">
           <input
             ref={fileInputRef}
             type="file"
@@ -751,12 +751,12 @@ function SessionChatPageInner() {
           </Button>
         </div>
         {uploading && (
-          <p className="mx-auto mt-2 max-w-3xl text-xs text-neutral-500">
+          <p className="mt-2 text-xs text-neutral-500">
             <FileText className="mr-1 inline h-3 w-3" />
             Extracting text from your PDF...
           </p>
         )}
-        <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-neutral-600">
+        <p className="mt-2 text-center text-xs text-neutral-600">
           Powered by {session?.model ? (AVAILABLE_MODELS[session.model as ModelId]?.label ?? session.model) : "AI"}
         </p>
       </div>

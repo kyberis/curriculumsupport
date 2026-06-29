@@ -26,7 +26,7 @@ export function DonateBanner() {
       >
         <X className="h-4 w-4" />
       </button>
-      <div className="mx-auto max-w-3xl">
+      <div className="w-full">
         <div className="flex items-start gap-3">
           <Heart className="mt-0.5 h-5 w-5 shrink-0 text-amber-500/70" />
           <div>
