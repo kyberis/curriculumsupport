@@ -1,8 +1,9 @@
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
+import { getDatabaseUrl } from "./connection-url";
 
-const url = process.env.DATABASE_URL;
+const url = getDatabaseUrl();
 if (!url) {
   throw new Error(
     "DATABASE_URL is not set. For local dev: docker compose up -d, then set DATABASE_URL in .env.local (see .env.example)."

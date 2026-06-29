@@ -24,6 +24,7 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
           NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
           NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+          SKIP_MIGRATE: "1"
           DATABASE_URL: postgresql://user:pass@localhost:5432/renata
           BLOB_READ_WRITE_TOKEN: vercel_blob_placeholder
           TAVILY_API_KEY: tvly-placeholder

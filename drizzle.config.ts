@@ -1,9 +1,7 @@
 import { defineConfig } from "drizzle-kit";
+import { getDatabaseUrlUnpooled } from "./lib/db/connection-url";
 
-const url =
-  process.env.DATABASE_URL_UNPOOLED ||
-  process.env.DATABASE_URL ||
-  "";
+const url = getDatabaseUrlUnpooled();
 
 export default defineConfig({
   schema: "./lib/db/schema.ts",
