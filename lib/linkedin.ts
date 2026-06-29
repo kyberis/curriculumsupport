@@ -194,7 +194,14 @@ export async function fetchLinkedInProfileContent(
     }
 
     const { content, truncated } = truncateContent(raw);
-    return { url: normalized, content, truncated, source };
+      return {
+        url: normalized,
+        content,
+        truncated,
+        source,
+        sourceUrl: normalized,
+        citationHint: `Cite this profile inline as [LinkedIn](${normalized}) or similar when stating facts from it.`,
+      };
   } catch {
     return {
       error: "Profile fetch failed unexpectedly.",
@@ -215,7 +222,8 @@ export async function buildLinkedInContextFromMessage(
     const via =
       result.source === "search" ? " (via web search fallback)" : "";
     return `## LinkedIn profile fetched${via}
-The user shared ${result.url}. Use the following public profile text as source material:
+The user shared ${result.url}. Use the following public profile text as source material.
+When stating facts from this profile, cite inline: [LinkedIn — profile](${result.url})
 
 ${result.content}`;
   }

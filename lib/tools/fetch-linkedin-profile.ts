@@ -4,7 +4,7 @@ import { fetchLinkedInProfileContent } from "@/lib/linkedin";
 
 export const fetchLinkedInProfile = tool({
   description:
-    "Fetch text from a LinkedIn **public** profile URL the user shared (linkedin.com/in/... or linkedin.com/pub/...). Call this when the user pastes their LinkedIn profile link so you can base the CV on what is publicly visible. Do not use for company pages or job posts.",
+    "Fetch text from a LinkedIn **public** profile URL the user shared (linkedin.com/in/... or linkedin.com/pub/...). Call this when the user pastes their LinkedIn profile link so you can base the CV on what is publicly visible. Do not use for company pages or job posts. Results include sourceUrl — cite it when stating facts from the profile.",
   inputSchema: z.object({
     url: z
       .string()
