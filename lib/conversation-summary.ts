@@ -2,11 +2,9 @@ import { generateText, gateway } from "ai";
 import { db } from "@/lib/db";
 import { messages, sessions, usageLogs, users } from "@/lib/db/schema";
 import { MAX_CONTEXT_MESSAGES, SUMMARY_INTERVAL } from "@/lib/agent";
-import { getModelConfig } from "@/lib/model";
+import { getModelConfig, SUMMARY_MODEL } from "@/lib/model";
 import { eq, asc, desc, sql, and, isNotNull } from "drizzle-orm";
 import type { Session } from "@/lib/db/schema";
-
-const SUMMARY_MODEL = "google/gemini-2.0-flash" as const;
 
 /** Minimum user messages before generating a shareable session summary. */
 const SESSION_SUMMARY_MIN_USER_MESSAGES = 2;

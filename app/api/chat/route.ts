@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { messages, sessions, usageLogs } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { CV_SYSTEM_PROMPT } from "@/lib/agent";
-import { getModelConfig } from "@/lib/model";
+import { getModelConfig, resolveModelId } from "@/lib/model";
 import { checkMessageLimit } from "@/lib/rate-limits";
 import { agentTools } from "@/lib/tools";
 import { getUserId } from "@/lib/auth";
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
   );
 
   const result = streamText({
-    model: gateway(session.model),
+    model: gateway(resolveModelId(session.model)),
     system: systemContent,
     messages: dbMessages,
     tools: agentTools,

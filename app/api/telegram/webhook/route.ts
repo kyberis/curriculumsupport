@@ -8,7 +8,7 @@ import {
 } from "@/lib/db/schema";
 import { sendMessage, type TelegramUpdate } from "@/lib/telegram";
 import { CV_SYSTEM_PROMPT } from "@/lib/agent";
-import { getModelConfig } from "@/lib/model";
+import { getModelConfig, resolveModelId } from "@/lib/model";
 import { agentTools } from "@/lib/tools";
 import {
   buildSessionSystemContent,
@@ -163,7 +163,7 @@ export async function POST(req: Request) {
 
   try {
     const result = await generateText({
-      model: gateway(activeSession.model),
+      model: gateway(resolveModelId(activeSession.model)),
       system: systemContent,
       messages: contextMessages,
       tools: agentTools,
