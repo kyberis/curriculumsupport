@@ -31,6 +31,8 @@ export interface LinkedInFetchResult {
   hint?: string;
   truncated?: boolean;
   source?: "extract" | "search";
+  sourceUrl?: string;
+  citationHint?: string;
 }
 
 /** Strip trailing punctuation common when URLs are pasted from mobile shares. */
