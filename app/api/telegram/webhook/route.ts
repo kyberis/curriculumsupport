@@ -13,7 +13,7 @@ import { agentTools } from "@/lib/tools";
 import {
   buildSessionSystemContent,
   getRecentContextMessages,
-  getUserProfileSummary,
+  getUserAgentContext,
   maybeUpdateConversationSummary,
   updateCrossSessionMemory,
 } from "@/lib/conversation-summary";
@@ -152,7 +152,7 @@ export async function POST(req: Request) {
   });
 
   const contextMessages = await getRecentContextMessages(activeSession.id);
-  const profileSummary = await getUserProfileSummary(userId);
+  const { name: userName, profileSummary } = await getUserAgentContext(userId);
   const linkedInContext = await buildLinkedInContextFromMessage(text);
   const telegramNotes = [
     "Note: The user is chatting via Telegram. Keep responses concise and avoid very long markdown blocks.",
@@ -164,7 +164,8 @@ export async function POST(req: Request) {
     activeSession,
     CV_SYSTEM_PROMPT,
     telegramNotes,
-    profileSummary
+    profileSummary,
+    userName
   );
 
   const modelConfig = getModelConfig(activeSession.model);

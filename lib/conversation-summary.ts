@@ -21,7 +21,7 @@ Produce a concise factual summary in the same language as the conversation. Incl
 - Target role, seniority, company/industry if mentioned
 - CV language preference
 - Whether they uploaded a CV, LinkedIn, or started from scratch
-- Key facts about the user (name, experience, skills, achievements) they shared
+- Key facts about the user (name, experience, skills, achievements) they shared. Never treat "Renata" as the user's name — Renata is the assistant.
 - Job description highlights if shared
 - Current workflow step (1–6) and what was decided or skipped
 - Gap analysis findings if any
@@ -32,7 +32,7 @@ Do not invent information. Keep under 400 words. Use bullet points.`;
 export const SESSION_SUMMARY_PROMPT = `You create a shareable summary of a Renata CV coaching session for cross-session memory.
 
 This summary will be shown to Renata in future sessions so she remembers the user. Include only facts from the conversation:
-- User's name and contact details if shared
+- User's name and contact details if shared (never use "Renata" as the user's name — Renata is the assistant)
 - Professional background, experience, skills, achievements
 - Target roles explored (title, company, industry)
 - CV language preferences
@@ -46,7 +46,7 @@ Do not invent information. Keep under 300 words. Use bullet points. Write in the
 export const USER_PROFILE_PROMPT = `You maintain a consolidated user profile for Renata CV coaching across multiple sessions.
 
 Merge session summaries into one profile that helps Renata personalize future conversations. Include:
-- Stable facts about the user (name, background, skills, career goals)
+- Stable facts about the user (name, background, skills, career goals). Never set the user's name to "Renata" — that is the assistant's name.
 - Roles they have applied for or are targeting
 - CV languages they prefer
 - Recurring themes or preferences
@@ -68,6 +68,27 @@ The following summarizes earlier messages not shown below. Use it for continuity
 ${session.conversationSummary.trim()}`;
 }
 
+export function appendUserIdentityToSystem(
+  systemContent: string,
+  userName: string | null | undefined
+): string {
+  const name = userName?.trim();
+  if (name) {
+    return `${systemContent}
+
+## User identity
+- You are Renata — the AI assistant. "Renata" is NEVER the user's name and must never appear as the candidate name in a CV, greeting, or summary.
+- The user's account name on file is: **${name}**.
+- Use this name for greetings and the CV "# Full Name" heading unless the user (or their uploaded CV / LinkedIn / past profile) provides a different preferred name — then prefer that.
+- If they correct their name, use the correction going forward.`;
+  }
+  return `${systemContent}
+
+## User identity
+- You are Renata — the AI assistant. "Renata" is NEVER the user's name and must never appear as the candidate name in a CV, greeting, or summary.
+- No account name is on file. Use the name from their uploaded CV, LinkedIn, or user profile memory if available; otherwise ask for their full name before drafting the CV.`;
+}
+
 export function appendUserProfileToSystem(
   systemContent: string,
   profileSummary: string | null | undefined
@@ -81,14 +102,25 @@ The following summarizes what you know about this user from previous coaching se
 ${profileSummary.trim()}`;
 }
 
-export async function getUserProfileSummary(
+export type UserAgentContext = {
+  name: string | null;
+  profileSummary: string | null;
+};
+
+export async function getUserAgentContext(
   userId: string
-): Promise<string | null> {
+): Promise<UserAgentContext> {
   const [user] = await db
-    .select({ profileSummary: users.profileSummary })
+    .select({
+      name: users.name,
+      profileSummary: users.profileSummary,
+    })
     .from(users)
     .where(eq(users.id, userId));
-  return user?.profileSummary?.trim() || null;
+  return {
+    name: user?.name?.trim() || null,
+    profileSummary: user?.profileSummary?.trim() || null,
+  };
 }
 
 export async function getRecentContextMessages(sessionId: string) {
@@ -109,9 +141,11 @@ export function buildSessionSystemContent(
   session: Session,
   basePrompt: string,
   extraNotes?: string,
-  profileSummary?: string | null
+  profileSummary?: string | null,
+  userName?: string | null
 ): string {
-  let systemContent = appendUserProfileToSystem(basePrompt, profileSummary);
+  let systemContent = appendUserIdentityToSystem(basePrompt, userName);
+  systemContent = appendUserProfileToSystem(systemContent, profileSummary);
   systemContent = appendSummaryToSystem(systemContent, session);
   if (session.cvContent) {
     systemContent += `\n\n## Uploaded CV Content\nThe user uploaded the following CV:\n\n${session.cvContent}`;

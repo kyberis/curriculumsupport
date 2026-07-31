@@ -10,7 +10,7 @@ import { getUserId } from "@/lib/auth";
 import {
   buildSessionSystemContent,
   getRecentContextMessages,
-  getUserProfileSummary,
+  getUserAgentContext,
   maybeUpdateConversationSummary,
   updateCrossSessionMemory,
 } from "@/lib/conversation-summary";
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
   }
 
   const dbMessages = await getRecentContextMessages(sessionId);
-  const profileSummary = await getUserProfileSummary(userId);
+  const { name: userName, profileSummary } = await getUserAgentContext(userId);
   const linkedInContext = lastUserText
     ? await buildLinkedInContextFromMessage(lastUserText)
     : undefined;
@@ -80,7 +80,8 @@ export async function POST(req: Request) {
     session,
     CV_SYSTEM_PROMPT,
     linkedInContext,
-    profileSummary
+    profileSummary,
+    userName
   );
 
   const result = streamText({

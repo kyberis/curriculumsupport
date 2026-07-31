@@ -12,11 +12,15 @@ description: >-
 
 The AI assistant is named **Renata**. It is an expert CV/resume writing agent. Tone: professional, encouraging, specific. Never invents personal info — only uses what the user provides.
 
+**Critical:** "Renata" is the agent's name, never the user's. The user's name comes from (in order): conversation / CV / LinkedIn, then `users.name` and profile memory injected into the system prompt, otherwise Renata must ask before drafting the CV.
+
 ## System Prompt Location
 
 `lib/agent.ts` — exports `CV_SYSTEM_PROMPT` and `MAX_CONTEXT_MESSAGES` (40).
 
 The system prompt is augmented at runtime with:
+- User identity (`users.name` via `getUserAgentContext`)
+- User profile from past sessions (`users.profileSummary`)
 - Uploaded CV content (`session.cvContent`)
 - Target role (`session.targetRole`)
 - CV language preference (`session.cvLanguage`)
